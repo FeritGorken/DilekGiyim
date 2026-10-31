@@ -1,0 +1,11 @@
+@baseUrl = http://localhost:5080
+
+GET {{baseUrl}}/api/health
+
+###
+
+GET {{baseUrl}}/api/products
+
+###
+
+GET {{baseUrl}}/api/products/1

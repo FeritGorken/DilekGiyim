@@ -1,0 +1,39 @@
+# ---------- .NET ----------
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+.vs/
+TestResults/
+*.nupkg
+project.lock.json
+appsettings.*.local.json
+appsettings.Production.json
+
+# ---------- Angular / Node ----------
+node_modules/
+/frontend/dist/
+/frontend/out-tsc/
+/frontend/.angular/
+/frontend/coverage/
+npm-debug.log*
+yarn-error.log*
+
+# ---------- Editörler / OS ----------
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ---------- Gizli bilgiler ----------
+.env
+.env.*
+*.pfx
