@@ -103,6 +103,8 @@ frontend/src/app/
 
 Gereksinimler: [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), [Node.js](https://nodejs.org/) 22+
 
+**Visual Studio ile:** `backend/DilekGiyim.sln` dosyasını açın. Proje .NET 10 kullandığı için **Visual Studio 2026** gerekir (Community sürümü ücretsiz). Visual Studio 2022 .NET 10 projelerini derleyemez. Alternatif: VS Code (C# Dev Kit) veya JetBrains Rider.
+
 **1. Backend** (http://localhost:5080)
 
 ```bash
