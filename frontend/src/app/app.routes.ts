@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { adminGuard } from './admin/admin-auth';
+import { customerGuard } from './core/account.service';
 
 export const routes: Routes = [
   // ---------- Mağaza ----------
@@ -12,6 +13,10 @@ export const routes: Routes = [
       { path: 'kategori/:category', loadComponent: () => import('./store/listing/listing').then((m) => m.Listing) },
       { path: 'urunler', title: 'Tüm Ürünler · Dilek Giyim', loadComponent: () => import('./store/listing/listing').then((m) => m.Listing) },
       { path: 'urun/:slug', loadComponent: () => import('./store/product/product').then((m) => m.ProductPage) },
+      { path: 'hesap/giris', title: 'Giriş Yap / Üye Ol · Dilek Giyim', loadComponent: () => import('./store/account/login').then((m) => m.AccountLogin) },
+      { path: 'hesap/sifre-yenile', title: 'Yeni Şifre · Dilek Giyim', loadComponent: () => import('./store/account/reset-and-track').then((m) => m.AccountReset) },
+      { path: 'hesap', title: 'Hesabım · Dilek Giyim', canActivate: [customerGuard], loadComponent: () => import('./store/account/account').then((m) => m.AccountPage) },
+      { path: 'siparis-takip', title: 'Sipariş Takibi · Dilek Giyim', loadComponent: () => import('./store/account/reset-and-track').then((m) => m.OrderTrack) },
     ],
   },
   {
@@ -43,6 +48,11 @@ export const routes: Routes = [
     loadComponent: () => import('./admin/login/login').then((m) => m.AdminLogin),
   },
   {
+    path: 'admin/sifre-yenile',
+    title: 'Yeni Şifre · Yönetim',
+    loadComponent: () => import('./admin/admin-password').then((m) => m.AdminReset),
+  },
+  {
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () => import('./admin/admin-layout').then((m) => m.AdminLayout),
@@ -54,6 +64,7 @@ export const routes: Routes = [
       { path: 'urunler/yeni', title: 'Yeni Ürün · Admin', loadComponent: () => import('./admin/products/product-edit').then((m) => m.AdminProductEdit) },
       { path: 'urunler/:id', title: 'Ürün Düzenle · Admin', loadComponent: () => import('./admin/products/product-edit').then((m) => m.AdminProductEdit) },
       { path: 'fiyat', title: 'Fiyat, Kampanya ve Sepet · Admin', loadComponent: () => import('./admin/pricing/pricing').then((m) => m.AdminPricing) },
+      { path: 'hesap', title: 'Hesabım · Admin', loadComponent: () => import('./admin/admin-password').then((m) => m.AdminAccount) },
     ],
   },
 

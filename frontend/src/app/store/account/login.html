@@ -1,0 +1,67 @@
+<main class="container page">
+  <div class="cols">
+    <!-- Giriş -->
+    <section class="card" aria-labelledby="login">
+      @if (!resetMode()) {
+        <div class="eyebrow">Hoş geldiniz</div>
+        <h1 id="login">Giriş yap</h1>
+        <form (ngSubmit)="submitLogin()" novalidate>
+          <label class="field">E-posta
+            <input class="input" type="email" name="email" autocomplete="email" placeholder="ornek@eposta.com" [(ngModel)]="login.email">
+          </label>
+          <label class="field">Şifre
+            <span class="pw">
+              <input class="input" name="password" autocomplete="current-password" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="login.password">
+              <button type="button" [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'" (click)="showPassword.set(!showPassword())">{{ showPassword() ? 'Gizle' : 'Göster' }}</button>
+            </span>
+          </label>
+          <div class="row">
+            <label class="check"><input type="checkbox" name="remember" [(ngModel)]="login.remember">Beni hatırla</label>
+            <button type="button" class="link" (click)="setReset(true)">Şifremi unuttum</button>
+          </div>
+          @if (loginError()) { <div class="alert" role="alert">{{ loginError() }}</div> }
+          <button type="submit" class="btn btn-dark" [disabled]="busy()">Giriş yap</button>
+        </form>
+        <div class="foot">Siparişinizi üye olmadan verdiyseniz <a routerLink="/siparis-takip">sipariş no ve e-posta ile takip edin</a>.</div>
+      } @else {
+        <button type="button" class="back" (click)="setReset(false)">← Girişe dön</button>
+        <h1>Şifrenizi mi unuttunuz?</h1>
+        <p class="lead">E-posta adresinizi yazın; şifre yenileme bağlantısını gönderelim. Bağlantı 30 dakika geçerlidir.</p>
+        <form (ngSubmit)="submitReset()">
+          <label class="field">E-posta
+            <input class="input" type="email" name="resetEmail" autocomplete="email" [(ngModel)]="resetEmail">
+          </label>
+          <button type="submit" class="btn btn-dark" [disabled]="busy() || !resetEmail">Bağlantı gönder</button>
+        </form>
+        @if (resetInfo()) { <div class="alert success" role="status">{{ resetInfo() }}</div> }
+      }
+    </section>
+
+    <!-- Üye ol -->
+    <section class="card cream" aria-labelledby="register">
+      <div class="eyebrow">Yeni müşteri</div>
+      <h2 id="register">Üye ol</h2>
+      <ul class="perks"><li>Siparişlerini takip et</li><li>Adreslerini kaydet</li><li>Favorilerini sakla</li></ul>
+      <form class="grid" (ngSubmit)="submitRegister()" novalidate>
+        <label class="field">Ad<input class="input" name="fn" autocomplete="given-name" [(ngModel)]="reg.firstName"></label>
+        <label class="field">Soyad<input class="input" name="ln" autocomplete="family-name" [(ngModel)]="reg.lastName"></label>
+        <label class="field span2">E-posta<input class="input" type="email" name="re" autocomplete="email" [(ngModel)]="reg.email"></label>
+        <label class="field span2">Cep telefonu<input class="input" type="tel" name="rp" autocomplete="tel" placeholder="05__ ___ __ __" [(ngModel)]="reg.phone"></label>
+        <label class="field span2">Şifre
+          <input class="input" type="password" name="rpw" autocomplete="new-password" [(ngModel)]="reg.password">
+          <small class="text-muted">En az 8 karakter; bir harf ve bir rakam içermeli.</small>
+        </label>
+        <label class="consent span2">
+          <input type="checkbox" name="terms" [(ngModel)]="reg.acceptTerms">
+          <span><a href="#">Üyelik sözleşmesini</a> ve <a href="#">KVKK aydınlatma metnini</a> okudum, kabul ediyorum.</span>
+        </label>
+        <label class="consent span2">
+          <input type="checkbox" name="mkt" [(ngModel)]="reg.marketingConsent">
+          <span>Kampanya ve yeniliklerden e-posta ve SMS ile haberdar olmak istiyorum. (İsteğe bağlı)</span>
+        </label>
+        @if (registerError()) { <div class="alert span2" role="alert">{{ registerError() }}</div> }
+        <button type="submit" class="btn btn-dark span2" [disabled]="busy()">Üye ol</button>
+      </form>
+    </section>
+  </div>
+</main>

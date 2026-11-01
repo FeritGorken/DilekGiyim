@@ -147,6 +147,7 @@ export interface OrderSummary {
   total: number;
   status: OrderStatus;
   paymentState: PaymentState;
+  returnRequested?: boolean;
 }
 
 export interface OrderLine { productName: string; colorName: string; size: string; sku: string; unitPrice: number; quantity: number; lineTotal: number; }
@@ -169,7 +170,42 @@ export interface OrderDetail extends OrderSummary {
   paidAmount: number | null;
   paidAt: string | null;
   paymentError: string | null;
+  isMember: boolean;
+  deliveredAt: string | null;
+  returnRequestedAt: string | null;
+  returnReason: string | null;
 }
+
+// ---------- Müşteri hesabı ----------
+
+export interface CustomerMe { id: number; firstName: string; lastName: string; email: string; phone: string; marketingConsent: boolean; }
+
+export interface Address { id: number; title: string; fullName: string; phone: string; city: string; district: string; line: string; isDefault: boolean; }
+
+export interface CustomerOrderLine { productName: string; productSlug: string | null; imageUrl: string | null; colorName: string; size: string; quantity: number; lineTotal: number; }
+
+export interface CustomerOrder {
+  id: number;
+  orderNo: string;
+  createdAt: string;
+  status: OrderStatus;
+  paymentState: PaymentState;
+  paymentMethod: string;
+  installments: number;
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  total: number;
+  trackingNo: string | null;
+  deliveredAt: string | null;
+  returnRequestedAt: string | null;
+  returnDeadline: string | null;
+  canCancel: boolean;
+  canRequestReturn: boolean;
+  lines: CustomerOrderLine[];
+}
+
+export interface TrackedOrder { orderNo: string; createdAt: string; status: OrderStatus; paymentState: PaymentState; trackingNo: string | null; total: number; itemCount: number; }
 
 export type StockRowStatus = 'ok' | 'critical' | 'out';
 

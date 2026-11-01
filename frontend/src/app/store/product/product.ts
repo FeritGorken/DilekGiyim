@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 
+import { AccountService } from '../../core/account.service';
 import { CartService } from '../../core/cart.service';
 import { CatalogService } from '../../core/catalog.service';
 import { ProductDetail, Variant } from '../../core/models';
@@ -16,6 +17,7 @@ import { formatTl, TlPipe } from '../../core/tl.pipe';
 export class ProductPage {
   private readonly catalog = inject(CatalogService);
   private readonly cart = inject(CartService);
+  private readonly account = inject(AccountService);
   private readonly router = inject(Router);
   private readonly title = inject(Title);
 
@@ -28,6 +30,17 @@ export class ProductPage {
   protected readonly size = signal<string | null>(null);
   protected readonly qty = signal(1);
   protected readonly message = signal<string | null>(null);
+
+  protected readonly isFav = computed(() => {
+    const p = this.product();
+    return !!p && this.account.favoriteIds().has(p.id);
+  });
+
+  protected toggleFav(): void {
+    const p = this.product();
+    if (p && !this.account.toggleFavorite(p.id))
+      this.router.navigate(['/hesap/giris'], { queryParams: { returnUrl: this.router.url } });
+  }
 
   protected readonly price = computed(() => {
     const p = this.product();

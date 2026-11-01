@@ -23,7 +23,10 @@ import { AdminAuthService } from './admin-auth';
           </a>
           <a routerLink="/admin/fiyat" routerLinkActive="on" ariaCurrentWhenActive="page">Fiyat, Kampanya ve Sepet</a>
         </nav>
-        <button type="button" class="logout" (click)="logout()">Çıkış yap</button>
+        <div class="user">
+          @if (auth.me(); as me) { <a routerLink="/admin/hesap" class="who">{{ me.displayName }}<small>Şifre değiştir</small></a> }
+          <button type="button" class="logout" (click)="logout()">Çıkış yap</button>
+        </div>
       </aside>
       <main class="content">
         <router-outlet />
@@ -42,14 +45,17 @@ import { AdminAuthService } from './admin-auth';
     nav a.on { background: var(--cream); color: var(--ink); font-weight: 500; }
     .badge { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; background: var(--accent-light); color: var(--ink); }
     .badge.warn { background: #e8b04a; }
-    .logout { margin-top: 24px; min-height: 44px; padding: 0 12px; border: 1px solid #3a322c; border-radius: 6px; background: transparent; color: #cfc5b8; text-align: left; cursor: pointer; }
+    .user { margin-top: auto; padding-top: 24px; display: flex; flex-direction: column; gap: 8px; }
+    .who { display: flex; flex-direction: column; padding: 8px 12px; color: var(--cream); font-size: 14px; }
+    .who small { font-size: 12px; color: #a99e91; }
+    .logout { min-height: 44px; padding: 0 12px; border: 1px solid #3a322c; border-radius: 6px; background: transparent; color: #cfc5b8; text-align: left; cursor: pointer; }
     .content { flex: 999 1 560px; min-width: 0; padding: 28px 32px 56px; }
     @media (max-width: 640px) { .content { padding: 20px 16px 40px; } }
   `
 })
 export class AdminLayout implements OnInit {
   private readonly api = inject(AdminApi);
-  private readonly auth = inject(AdminAuthService);
+  protected readonly auth = inject(AdminAuthService);
   private readonly router = inject(Router);
 
   protected readonly pending = signal(0);
@@ -62,7 +68,6 @@ export class AdminLayout implements OnInit {
   }
 
   protected logout(): void {
-    this.auth.logout();
-    this.router.navigate(['/admin/giris']);
+    this.auth.logout().subscribe(() => this.router.navigate(['/admin/giris']));
   }
 }

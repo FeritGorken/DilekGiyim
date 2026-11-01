@@ -63,7 +63,7 @@ public record TopProductDto(string Name, int Quantity);
 
 public record OrderSummaryDto(
     int Id, string OrderNo, DateTime CreatedAt, string CustomerName, int ItemCount,
-    string PaymentMethod, decimal Total, OrderStatus Status, PaymentState PaymentState);
+    string PaymentMethod, decimal Total, OrderStatus Status, PaymentState PaymentState, bool ReturnRequested = false);
 
 public record OrderLineDto(string ProductName, string ColorName, string Size, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal);
 
@@ -73,7 +73,8 @@ public record OrderDetailDto(
     string PaymentMethod, int Installments,
     decimal Subtotal, decimal Discount, decimal Shipping, decimal Total,
     string? CouponCode, string? TrackingNo, string? Note, List<OrderLineDto> Lines,
-    PaymentState PaymentState, string? PaymentProvider, string? PaymentId, decimal? PaidAmount, DateTime? PaidAt, string? PaymentError);
+    PaymentState PaymentState, string? PaymentProvider, string? PaymentId, decimal? PaidAmount, DateTime? PaidAt, string? PaymentError,
+    bool IsMember, DateTime? DeliveredAt, DateTime? ReturnRequestedAt, string? ReturnReason);
 
 public record UpdateOrderStatusRequest(OrderStatus Status, string? TrackingNo, PaymentState? PaymentState = null);
 

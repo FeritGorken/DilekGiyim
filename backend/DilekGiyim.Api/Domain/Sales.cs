@@ -70,6 +70,12 @@ public class Order
     public string? TrackingNo { get; set; }
     public string? Note { get; set; }
 
+    /// <summary>Üye müşterinin siparişiyse dolu; misafir siparişte boş</summary>
+    public int? CustomerId { get; set; }
+    public DateTime? DeliveredAt { get; set; }
+    public DateTime? ReturnRequestedAt { get; set; }
+    public string? ReturnReason { get; set; }
+
     public List<OrderLine> Lines { get; set; } = [];
 }
 

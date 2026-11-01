@@ -334,3 +334,23 @@
     color: var(--text-2);
   }
 }
+
+.fav {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  border: 0;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.on {
+    color: var(--accent);
+  }
+}

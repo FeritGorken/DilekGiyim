@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
+using DilekGiyim.Api.Auth;
 using DilekGiyim.Api.Data;
 using DilekGiyim.Api.Endpoints;
 using DilekGiyim.Api.Payments;
@@ -18,6 +19,9 @@ builder.Services.AddOpenApi();
 // Veritabanı: geliştirmede SQLite dosyası. Canlıda bağlantı dizesi değiştirilerek SQL Server / PostgreSQL kullanılabilir.
 builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=dilekgiyim.db"));
+
+builder.Services.AddDgAuth(builder.Environment);
+builder.Services.AddSingleton<IEmailSender, LogEmailSender>();
 
 builder.Services.AddScoped<PricingService>();
 builder.Services.AddScoped<OrderService>();
@@ -67,6 +71,8 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
     await SeedData.EnsureSeededAsync(db);
+    await AdminAuthEndpoints.EnsureInitialAdminAsync(db,
+        scope.ServiceProvider.GetRequiredService<PasswordService>(), app.Configuration, app.Logger);
 }
 
 if (app.Environment.IsDevelopment())
@@ -80,10 +86,15 @@ else
 }
 
 app.UseCors(FrontendCors);
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 app.MapStoreEndpoints();
+app.MapAdminAuthEndpoints();
 app.MapAdminEndpoints();
+app.MapAccountEndpoints();
 app.MapPaymentEndpoints();
 
 app.Run();

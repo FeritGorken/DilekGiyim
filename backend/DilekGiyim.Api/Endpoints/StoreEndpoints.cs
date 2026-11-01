@@ -1,3 +1,4 @@
+using DilekGiyim.Api.Auth;
 using DilekGiyim.Api.Contracts;
 using DilekGiyim.Api.Data;
 using DilekGiyim.Api.Domain;
@@ -76,11 +77,23 @@ public static class StoreEndpoints
         api.MapPost("/orders", async (OrderService orders, CheckoutRequest req, HttpContext http) =>
         {
             var ip = http.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
-            var result = await orders.PlaceAsync(req, ip);
+            // Müşteri giriş yapmışsa sipariş hesabına bağlanır (misafir sipariş de mümkün)
+            var result = await orders.PlaceAsync(req, ip, http.User.UserId());
             return result.Order is null
                 ? Results.BadRequest(new ErrorDto(result.Error!))
                 : Results.Ok(new CheckoutResultDto(result.Order.OrderNo, result.Order.Total, result.PaymentPageUrl, result.Order.PublicKey));
         });
+
+        // Üye olmadan sipariş takibi: sipariş no + e-posta
+        api.MapGet("/orders/track", async (AppDbContext db, string orderNo, string email) =>
+        {
+            var no = (orderNo ?? "").Trim().TrimStart('#');
+            var mail = (email ?? "").Trim().ToLowerInvariant();
+            var o = await db.Orders.AsNoTracking().Include(x => x.Lines).FirstOrDefaultAsync(x => x.OrderNo == no);
+            if (o is null || o.Email.Trim().ToLowerInvariant() != mail)
+                return Results.NotFound(new ErrorDto("Sipariş no ve e-posta eşleşen bir sipariş bulunamadı."));
+            return Results.Ok(new TrackOrderDto(o.OrderNo, o.CreatedAt, o.Status, o.PaymentState, o.TrackingNo, o.Total, o.Lines.Sum(l => l.Quantity)));
+        }).RequireRateLimiting(AuthSetup.LoginRateLimit);
 
         // Sonuç sayfası için: sipariş no + gizli anahtar ile ödeme durumu
         api.MapGet("/orders/{orderNo}/status", async (AppDbContext db, string orderNo, string key) =>
@@ -100,7 +113,7 @@ public static class StoreEndpoints
     public static List<string> SortSizes(IEnumerable<string> sizes) =>
         sizes.OrderBy(s => Array.IndexOf(SizeOrder, s) is var i && i >= 0 ? i : int.MaxValue).ThenBy(s => s).ToList();
 
-    private static ProductListItemDto ToListItem(Product p)
+    public static ProductListItemDto ToListItem(Product p)
     {
         var total = p.Variants.Sum(v => v.Stock);
         var status = total == 0 ? "out" : total <= p.LowStockDisplay ? "low" : "in";

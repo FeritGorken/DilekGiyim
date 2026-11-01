@@ -1,5 +1,4 @@
 @baseUrl = http://localhost:5080
-@adminKey = gelistirme-admin-anahtari
 
 ### Mağaza
 GET {{baseUrl}}/api/products?featured=true&tab=best
@@ -13,17 +12,20 @@ Content-Type: application/json
 
 { "items": [ { "variantId": 3, "quantity": 1 } ], "couponCode": "DILEK10" }
 
-### Admin
+### Admin girişi (yanıttaki dg_admin çerezi sonraki isteklerde kullanılır)
+POST {{baseUrl}}/api/admin/auth/login
+Content-Type: application/json
+
+{ "userName": "dilek", "password": "Gelistirme2026", "remember": false }
+
+###
 GET {{baseUrl}}/api/admin/dashboard
-X-Admin-Key: {{adminKey}}
 
 ###
 GET {{baseUrl}}/api/admin/stock?filter=critical
-X-Admin-Key: {{adminKey}}
 
 ###
 POST {{baseUrl}}/api/admin/prices/bulk
-X-Admin-Key: {{adminKey}}
 Content-Type: application/json
 
 { "categoryId": 1, "increase": true, "percent": 10, "roundTo90": true, "apply": false }

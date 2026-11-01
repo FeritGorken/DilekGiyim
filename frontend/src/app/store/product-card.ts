@@ -1,6 +1,7 @@
-import { Component, computed, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject, input } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 
+import { AccountService } from '../core/account.service';
 import { ProductListItem } from '../core/models';
 import { TlPipe } from '../core/tl.pipe';
 
@@ -10,6 +11,7 @@ import { TlPipe } from '../core/tl.pipe';
   template: `
     @let p = product();
     <article class="card">
+      <div class="media-wrap">
       <a [routerLink]="['/urun', p.slug]" class="media">
         @if (p.imageUrl) {
           <img [src]="p.imageUrl" [alt]="p.name" loading="lazy">
@@ -25,6 +27,11 @@ import { TlPipe } from '../core/tl.pipe';
           <span class="tag">Yeni</span>
         }
       </a>
+        <button type="button" class="fav" [class.on]="isFav()" [attr.aria-pressed]="isFav()"
+          [attr.aria-label]="isFav() ? 'Favorilerden çıkar' : 'Favorilere ekle'" (click)="toggleFav($event)">
+          <svg width="18" height="18" viewBox="0 0 24 24" [attr.fill]="isFav() ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>
+        </button>
+      </div>
       <div class="meta">{{ p.categoryName.toLocaleUpperCase('tr-TR') }}</div>
       <h3><a [routerLink]="['/urun', p.slug]">{{ p.name }}</a></h3>
       @if (p.colors.length) {
@@ -55,6 +62,9 @@ import { TlPipe } from '../core/tl.pipe';
     .placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 13px; }
     .tag { position: absolute; left: 12px; top: 12px; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; color: #fff; background: var(--ink); }
     .tag.accent { background: var(--accent); }
+    .media-wrap { position: relative; }
+    .fav { position: absolute; right: 10px; top: 10px; z-index: 1; width: 40px; height: 40px; border-radius: 20px; border: 0; background: #fff; color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .fav.on { color: var(--accent); }
     .meta { margin-top: 14px; font-size: 12px; letter-spacing: .14em; color: var(--muted); }
     h3 { margin: 6px 0 0; font-family: var(--serif); font-size: 23px; font-weight: 500; line-height: 1.2; }
     .swatches { margin-top: 8px; display: flex; gap: 6px; }
@@ -66,7 +76,18 @@ import { TlPipe } from '../core/tl.pipe';
   `
 })
 export class ProductCard {
+  private readonly account = inject(AccountService);
+  private readonly router = inject(Router);
   readonly product = input.required<ProductListItem>();
+
+  protected readonly isFav = computed(() => this.account.favoriteIds().has(this.product().id));
+
+  protected toggleFav(e: Event): void {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!this.account.toggleFavorite(this.product().id))
+      this.router.navigate(['/hesap/giris'], { queryParams: { returnUrl: this.router.url } });
+  }
 
   protected readonly discountPct = computed(() => {
     const p = this.product();

@@ -1,0 +1,174 @@
+<main class="container page">
+  <div class="eyebrow">Hesabım</div>
+  @if (account.me(); as me) {
+    <h1>Merhaba, {{ me.firstName }}</h1>
+  }
+
+  <div class="layout">
+    <nav class="side" aria-label="Hesap menüsü">
+      @for (t of tabs; track t.id) {
+        <button type="button" [attr.aria-current]="active() === t.id ? 'page' : null" [class.on]="active() === t.id" (click)="select(t.id)">{{ t.label }}</button>
+      }
+      <button type="button" class="logout" (click)="logout()">Çıkış yap</button>
+    </nav>
+
+    <section class="content">
+      @switch (active()) {
+        @case ('siparisler') {
+          <h2>Siparişlerim</h2>
+          @if (orderMsg(); as m) { <div class="alert" [class.success]="m.ok" role="status">{{ m.text }}</div> }
+          @if (orders(); as list) {
+            <div class="orders">
+              @for (o of list; track o.id) {
+                <article class="order">
+                  <button type="button" class="order-head" [attr.aria-expanded]="openOrder() === o.id" (click)="toggle(o.id)">
+                    <span class="grow"><strong>Sipariş #{{ o.orderNo }}</strong><small>{{ o.createdAt | date: 'd MMMM y' }} · {{ o.lines.length }} ürün</small></span>
+                    <strong>{{ o.total | tl }}</strong>
+                    <span [class]="pillClass(o)">{{ labels[o.status] }}</span>
+                    <span class="chev" aria-hidden="true">{{ openOrder() === o.id ? '−' : '+' }}</span>
+                  </button>
+                  @if (openOrder() === o.id) {
+                    <div class="order-body">
+                      @if (hasTimeline(o)) {
+                        <ol class="steps" aria-label="Sipariş durumu">
+                          @for (s of steps(o); track s.label) {
+                            <li [class.done]="s.done"><span></span>{{ s.label }}</li>
+                          }
+                        </ol>
+                      }
+                      @if (o.trackingNo) { <p class="info">Kargo takip no: <strong>{{ o.trackingNo }}</strong></p> }
+                      <ul class="lines">
+                        @for (l of o.lines; track $index) {
+                          <li>
+                            <span class="thumb">@if (l.imageUrl) { <img [src]="l.imageUrl" alt=""> }</span>
+                            <span class="grow">
+                              @if (l.productSlug) { <a [routerLink]="['/urun', l.productSlug]">{{ l.productName }}</a> } @else { {{ l.productName }} }
+                              <small>{{ l.colorName }} · {{ l.size }} · {{ l.quantity }} adet</small>
+                            </span>
+                            <strong>{{ l.lineTotal | tl }}</strong>
+                          </li>
+                        }
+                      </ul>
+                      <div class="totals">
+                        <span>Ödeme: {{ o.paymentMethod }}@if (o.installments > 1) { · {{ o.installments }} taksit }</span>
+                        @if (o.discount > 0) { <span>İndirim: −{{ o.discount | tl }}</span> }
+                        <span>Kargo: {{ o.shipping === 0 ? 'Ücretsiz' : (o.shipping | tl) }}</span>
+                      </div>
+
+                      <div class="actions">
+                        @if (o.canCancel) { <button type="button" class="btn-sm line" (click)="cancel(o)">Siparişi iptal et</button> }
+                        @if (o.canRequestReturn) { <button type="button" class="btn-sm dark" (click)="returnFor.set(o.id)">İade talebi oluştur</button> }
+                      </div>
+                      @if (o.canCancel) { <p class="info">Sipariş kargoya verilene kadar iptal edebilirsiniz.</p> }
+                      @if (o.canRequestReturn && o.returnDeadline) { <p class="info">İade süresi: {{ o.returnDeadline | date: 'd MMMM y' }} tarihine kadar.</p> }
+                      @if (o.returnRequestedAt) { <p class="info">İade talebiniz {{ o.returnRequestedAt | date: 'd MMMM y' }} tarihinde alındı.</p> }
+
+                      @if (returnFor() === o.id) {
+                        <form class="return" (ngSubmit)="sendReturn(o)">
+                          <label class="field">İade nedeni
+                            <textarea class="textarea" name="reason" rows="3" placeholder="Örn. beden uymadı" [(ngModel)]="returnReason"></textarea>
+                          </label>
+                          <div class="actions">
+                            <button type="submit" class="btn-sm dark" [disabled]="!returnReason.trim()">Talebi gönder</button>
+                            <button type="button" class="btn-sm line" (click)="returnFor.set(null)">Vazgeç</button>
+                          </div>
+                        </form>
+                      }
+                    </div>
+                  }
+                </article>
+              } @empty {
+                <div class="empty">
+                  <p>Henüz siparişiniz yok.</p>
+                  <a routerLink="/" class="btn btn-dark">Alışverişe başla</a>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="text-muted">Yükleniyor…</p>
+          }
+        }
+
+        @case ('favoriler') {
+          <h2>Favorilerim</h2>
+          @if (favorites(); as list) {
+            <div class="fav-grid">
+              @for (p of list; track p.id) {
+                <app-product-card [product]="p" />
+              } @empty {
+                <p class="text-muted">Favori listeniz boş. Ürünlerdeki kalbe dokunarak ekleyebilirsiniz.</p>
+              }
+            </div>
+          } @else {
+            <p class="text-muted">Yükleniyor…</p>
+          }
+        }
+
+        @case ('adresler') {
+          <div class="head-row">
+            <h2>Adreslerim</h2>
+            <button type="button" class="btn-sm line" (click)="newAddress()">+ Yeni adres</button>
+          </div>
+          @if (addrMsg(); as m) { <div class="alert" [class.success]="m.ok" role="status">{{ m.text }}</div> }
+
+          @if (editing(); as a) {
+            <form class="addr-form" (ngSubmit)="saveAddress(a)">
+              <label class="field">Adres başlığı<input class="input" name="t" placeholder="Ev, İş…" [(ngModel)]="a.title"></label>
+              <label class="field">Ad soyad<input class="input" name="n" autocomplete="name" [(ngModel)]="a.fullName"></label>
+              <label class="field">Telefon<input class="input" type="tel" name="p" autocomplete="tel" [(ngModel)]="a.phone"></label>
+              <label class="field">İl<input class="input" name="c" autocomplete="address-level1" [(ngModel)]="a.city"></label>
+              <label class="field">İlçe<input class="input" name="d" autocomplete="address-level2" [(ngModel)]="a.district"></label>
+              <label class="field span2">Açık adres<textarea class="textarea" name="l" rows="3" autocomplete="street-address" [(ngModel)]="a.line"></textarea></label>
+              <label class="check span2"><input type="checkbox" name="def" [(ngModel)]="a.isDefault">Varsayılan adresim olsun</label>
+              <div class="actions span2">
+                <button type="submit" class="btn-sm dark">Kaydet</button>
+                <button type="button" class="btn-sm line" (click)="editing.set(null)">Vazgeç</button>
+              </div>
+            </form>
+          }
+
+          @if (addresses(); as list) {
+            <div class="addr-grid">
+              @for (a of list; track a.id) {
+                <div class="addr" [class.default]="a.isDefault">
+                  <div class="addr-top"><strong>{{ a.title }}</strong>@if (a.isDefault) { <span class="tag">Varsayılan</span> }</div>
+                  {{ a.fullName }} · {{ a.phone }}<br>{{ a.line }}<br>{{ a.district }} / {{ a.city }}
+                  <div class="addr-actions">
+                    <button type="button" class="link-underline" (click)="editAddress(a)">Düzenle</button>
+                    @if (!a.isDefault) { <button type="button" class="link-underline" (click)="makeDefault(a)">Varsayılan yap</button> }
+                    <button type="button" class="link-underline danger" (click)="removeAddress(a)">Sil</button>
+                  </div>
+                </div>
+              } @empty {
+                <p class="text-muted">Kayıtlı adresiniz yok.</p>
+              }
+            </div>
+          }
+        }
+
+        @case ('bilgiler') {
+          <h2>Hesap bilgileri</h2>
+          <form class="profile" (ngSubmit)="saveProfile()">
+            <label class="field">Ad<input class="input" name="fn" autocomplete="given-name" [(ngModel)]="profile.firstName"></label>
+            <label class="field">Soyad<input class="input" name="ln" autocomplete="family-name" [(ngModel)]="profile.lastName"></label>
+            <label class="field">E-posta<input class="input" type="email" name="em" autocomplete="email" [(ngModel)]="profile.email"></label>
+            <label class="field">Cep telefonu<input class="input" type="tel" name="ph" autocomplete="tel" [(ngModel)]="profile.phone"></label>
+            <label class="check span2"><input type="checkbox" name="mk" [(ngModel)]="profile.marketingConsent">Kampanyalardan e-posta ile haberdar olmak istiyorum</label>
+            @if (profileMsg(); as m) { <div class="alert span2" [class.success]="m.ok" role="status">{{ m.text }}</div> }
+            <div class="span2"><button type="submit" class="btn-sm dark">Kaydet</button></div>
+          </form>
+
+          <form class="profile pw" (ngSubmit)="changePassword()">
+            <div class="span3"><strong>Şifre değiştir</strong></div>
+            <label class="field">Mevcut şifre<input class="input" type="password" name="c" autocomplete="current-password" [(ngModel)]="pw.current"></label>
+            <label class="field">Yeni şifre<input class="input" type="password" name="n1" autocomplete="new-password" [(ngModel)]="pw.next"></label>
+            <label class="field">Yeni şifre (tekrar)<input class="input" type="password" name="n2" autocomplete="new-password" [(ngModel)]="pw.next2"></label>
+            @if (pwMsg(); as m) { <div class="alert span3" [class.success]="m.ok" role="status">{{ m.text }}</div> }
+            <div class="span3"><button type="submit" class="btn-sm line">Şifreyi güncelle</button></div>
+          </form>
+          <p class="info">Hesabınızı silmek veya kişisel verilerinizin bir kopyasını istemek için <a href="#">KVKK başvuru formunu</a> kullanabilirsiniz.</p>
+        }
+      }
+    </section>
+  </div>
+</main>

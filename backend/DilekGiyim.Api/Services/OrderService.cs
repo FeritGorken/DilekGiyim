@@ -12,6 +12,7 @@ public class OrderService(
     PricingService pricing,
     IPaymentProvider payments,
     IOptions<PaymentOptions> paymentOptions,
+    IEmailSender email,
     ILogger<OrderService> logger)
 {
     public record PlaceResult(Order? Order, string? Error, string? PaymentPageUrl = null);
@@ -20,7 +21,7 @@ public class OrderService(
     /// Siparişi oluşturur ve stoktan düşer. Stok, kupon ve fiyat sunucuda yeniden kontrol edilir.
     /// Kartla ödemede sipariş "Ödeme bekleniyor" durumunda açılır (stok ayrılır) ve ödeme sayfası adresi döner.
     /// </summary>
-    public async Task<PlaceResult> PlaceAsync(CheckoutRequest req, string buyerIp, CancellationToken ct = default)
+    public async Task<PlaceResult> PlaceAsync(CheckoutRequest req, string buyerIp, int? customerId = null, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(req.CustomerName) || string.IsNullOrWhiteSpace(req.Email) ||
             string.IsNullOrWhiteSpace(req.Phone) || string.IsNullOrWhiteSpace(req.Address) ||
@@ -72,7 +73,8 @@ public class OrderService(
                 Discount = quote.Discount,
                 Shipping = quote.Shipping,
                 Total = quote.Total,
-                CouponCode = quote.CouponApplied ? quote.CouponCode : null
+                CouponCode = quote.CouponApplied ? quote.CouponCode : null,
+                CustomerId = customerId
             };
 
             foreach (var line in quote.Lines.Where(l => l.Quantity > 0))
@@ -106,7 +108,11 @@ public class OrderService(
             await tx.CommitAsync(ct);
         }
 
-        if (!isCard) return new(order, null);
+        if (!isCard)
+        {
+            await SendConfirmationAsync(order, ct);
+            return new(order, null);
+        }
 
         // Kartla ödeme: ödeme oturumunu başlat
         var callbackUrl = paymentOptions.Value.PublicBaseUrl.TrimEnd('/') + "/api/payments/callback";
@@ -151,6 +157,7 @@ public class OrderService(
                 order.Installments = Math.Max(1, r.Installment);
                 order.PaymentError = null;
                 await db.SaveChangesAsync(ct);
+                await SendConfirmationAsync(order, ct);
                 break;
 
             case PaymentOutcome.Failed:
@@ -221,6 +228,7 @@ public class OrderService(
             }
         }
 
+        if (next == OrderStatus.Delivered && order.DeliveredAt is null) order.DeliveredAt = DateTime.UtcNow;
         order.Status = next;
         if (trackingNo is not null) order.TrackingNo = string.IsNullOrWhiteSpace(trackingNo) ? null : trackingNo.Trim();
         await db.SaveChangesAsync(ct);
@@ -241,6 +249,22 @@ public class OrderService(
                 "Bu ödeme durumu elle seçilemez.",
             _ => null
         };
+    }
+
+    /// <summary>Sipariş onayı e-postası (gönderim hatası siparişi bozmaz)</summary>
+    private async Task SendConfirmationAsync(Order order, CancellationToken ct)
+    {
+        try
+        {
+            var lines = string.Join("\n", order.Lines.Select(l => $"- {l.ProductName} ({l.ColorName}, {l.Size}) x{l.Quantity}: {l.UnitPrice * l.Quantity:N2} TL"));
+            var body = $"Merhaba {order.CustomerName},\n\nSiparişiniz alındı. Sipariş no: #{order.OrderNo}\n\n{lines}\n\n" +
+                       $"Toplam: {order.Total:N2} TL\nÖdeme: {order.PaymentMethod}\n\nDilek Giyim";
+            await email.SendAsync(order.Email, $"Siparişiniz alındı (#{order.OrderNo})", body, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Sipariş onay e-postası gönderilemedi: {OrderNo}", order.OrderNo);
+        }
     }
 
     private async Task RestockAsync(Order order, StockMovementType type, CancellationToken ct)

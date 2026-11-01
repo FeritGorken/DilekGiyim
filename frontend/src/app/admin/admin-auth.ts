@@ -1,57 +1,73 @@
 import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { catchError, map, Observable, of, tap, throwError } from 'rxjs';
 
-const STORAGE_KEY = 'dg-admin-key';
-const HEADER = 'X-Admin-Key';
+export interface AdminMe { id: number; userName: string; displayName: string; email: string; }
 
 /**
- * Basit admin girişi: anahtar sekme kapanana kadar sessionStorage'da tutulur.
- * Canlıya çıkmadan önce kullanıcı adı/şifreli gerçek kimlik doğrulamayla değiştirilmeli.
+ * Yönetim paneli oturumu. Oturum sunucuda, HttpOnly çerezde tutulur;
+ * tarayıcı tarafında hiçbir anahtar veya şifre saklanmaz.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminAuthService {
   private readonly http = inject(HttpClient);
-  readonly key = signal<string | null>(this.read());
+  private readonly base = '/api/admin/auth';
 
-  login(key: string): Observable<boolean> {
-    return this.http.get('/api/admin/me', { headers: { [HEADER]: key } }).pipe(
-      map(() => {
-        this.key.set(key);
-        try { sessionStorage.setItem(STORAGE_KEY, key); } catch { /* yok say */ }
-        return true;
-      }),
-      catchError(() => of(false))
+  /** undefined: henüz kontrol edilmedi, null: giriş yok */
+  readonly me = signal<AdminMe | null | undefined>(undefined);
+
+  check(): Observable<boolean> {
+    return this.http.get<AdminMe>(`${this.base}/me`).pipe(
+      tap((m) => this.me.set(m)),
+      map(() => true),
+      catchError(() => {
+        this.me.set(null);
+        return of(false);
+      })
     );
   }
 
-  logout(): void {
-    this.key.set(null);
-    try { sessionStorage.removeItem(STORAGE_KEY); } catch { /* yok say */ }
+  login(userName: string, password: string, remember: boolean): Observable<AdminMe> {
+    return this.http.post<AdminMe>(`${this.base}/login`, { userName, password, remember }).pipe(tap((m) => this.me.set(m)));
   }
 
-  private read(): string | null {
-    try { return sessionStorage.getItem(STORAGE_KEY); } catch { return null; }
+  logout(): Observable<unknown> {
+    return this.http.post(`${this.base}/logout`, {}).pipe(
+      catchError(() => of(null)),
+      tap(() => this.me.set(null))
+    );
+  }
+
+  forgot(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/forgot`, { email });
+  }
+
+  reset(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/reset`, { token, newPassword });
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/change-password`, { currentPassword, newPassword });
   }
 }
 
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AdminAuthService);
-  return auth.key() ? true : inject(Router).createUrlTree(['/admin/giris']);
+  const router = inject(Router);
+  if (auth.me()) return true;
+  return auth.check().pipe(map((ok) => (ok ? true : router.createUrlTree(['/admin/giris']))));
 };
 
-/** /api/admin isteklerine anahtarı ekler; 401 gelirse giriş sayfasına yönlendirir. */
+/** Admin isteklerinde oturum düşerse (401) giriş sayfasına yönlendirir. */
 export const adminKeyInterceptor: HttpInterceptorFn = (req, next) => {
-  if (!req.url.startsWith('/api/admin') || req.headers.has(HEADER)) return next(req);
+  if (!req.url.startsWith('/api/admin') || req.url.startsWith('/api/admin/auth/')) return next(req);
   const auth = inject(AdminAuthService);
   const router = inject(Router);
-  const key = auth.key();
-  const withKey = key ? req.clone({ setHeaders: { [HEADER]: key } }) : req;
-  return next(withKey).pipe(
+  return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401) {
-        auth.logout();
+        auth.me.set(null);
         router.navigate(['/admin/giris']);
       }
       return throwError(() => err);

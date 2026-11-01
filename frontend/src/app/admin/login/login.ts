@@ -1,49 +1,70 @@
-import { Component, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { AdminAuthService } from '../admin-auth';
 
+type View = 'login' | 'forgot';
+
 @Component({
   selector: 'app-admin-login',
-  imports: [FormsModule, RouterLink],
-  template: `
-    <main class="wrap">
-      <form class="box" (ngSubmit)="submit()">
-        <a routerLink="/" class="logo">dilek<span>giyim</span></a>
-        <div class="sub">YÖNETİM PANELİ</div>
-        <label class="field">Yönetici anahtarı
-          <input class="input" type="password" name="key" autocomplete="current-password" required [(ngModel)]="key">
-        </label>
-        @if (error()) { <div class="alert" role="alert">{{ error() }}</div> }
-        <button type="submit" class="adm-btn primary" [disabled]="busy() || !key">{{ busy() ? 'Kontrol ediliyor…' : 'Giriş yap' }}</button>
-      </form>
-    </main>
-  `,
-  styles: `
-    .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--admin-bg); }
-    .box { width: 100%; max-width: 380px; padding: 32px; border-radius: 10px; background: #fff; border: 1px solid var(--admin-line); display: flex; flex-direction: column; gap: 16px; }
-    .logo { font-family: var(--serif); font-size: 38px; font-weight: 600; line-height: 1; }
-    .logo span { color: var(--accent); font-weight: 500; }
-    .sub { margin-top: -10px; font-size: 11px; letter-spacing: .28em; color: var(--muted); }
-  `
+  imports: [FormsModule],
+  templateUrl: './login.html',
+  styleUrl: './login.scss'
 })
 export class AdminLogin {
   private readonly auth = inject(AdminAuthService);
   private readonly router = inject(Router);
 
-  protected key = '';
+  /** Oturum gerektiren bir sayfadan gelindiyse geri dönülecek adres */
+  readonly returnUrl = input<string>();
+
+  protected readonly view = signal<View>('login');
   protected readonly busy = signal(false);
-  protected readonly error = signal<string | null>(null);
+  protected readonly error = signal<{ text: string; locked: boolean } | null>(null);
+  protected readonly info = signal<string | null>(null);
+  protected readonly showPassword = signal(false);
+
+  protected form = { userName: '', password: '', remember: false };
+  protected forgotEmail = '';
 
   protected submit(): void {
-    if (!this.key) return;
+    if (!this.form.userName || !this.form.password) {
+      this.error.set({ text: 'Kullanıcı adı ve şifre gerekli.', locked: false });
+      return;
+    }
     this.busy.set(true);
     this.error.set(null);
-    this.auth.login(this.key).subscribe((ok) => {
-      this.busy.set(false);
-      if (ok) this.router.navigate(['/admin']);
-      else this.error.set('Anahtar hatalı veya sunucuya ulaşılamadı.');
+    this.auth.login(this.form.userName.trim(), this.form.password, this.form.remember).subscribe({
+      next: () => {
+        this.busy.set(false);
+        const back = this.returnUrl();
+        this.router.navigateByUrl(back && back.startsWith('/admin') ? back : '/admin');
+      },
+      error: (e: HttpErrorResponse) => {
+        this.busy.set(false);
+        this.form.password = '';
+        this.error.set({
+          text: e.error?.message ?? (e.status === 0 ? 'Sunucuya ulaşılamadı.' : 'Giriş yapılamadı.'),
+          locked: e.status === 423 || e.status === 429
+        });
+      }
     });
+  }
+
+  protected sendReset(): void {
+    if (!this.forgotEmail) return;
+    this.busy.set(true);
+    this.auth.forgot(this.forgotEmail.trim()).subscribe({
+      next: (r) => { this.busy.set(false); this.info.set(r.message); },
+      error: (e: HttpErrorResponse) => { this.busy.set(false); this.info.set(e.error?.message ?? 'İstek gönderilemedi.'); }
+    });
+  }
+
+  protected setView(v: View): void {
+    this.view.set(v);
+    this.error.set(null);
+    this.info.set(null);
   }
 }

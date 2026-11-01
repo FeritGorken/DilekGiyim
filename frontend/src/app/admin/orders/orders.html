@@ -34,7 +34,10 @@
                 <span class="pill" [class]="'pay-' + o.paymentState">{{ payLabels[o.paymentState] }}</span>
               </td>
               <td><strong>{{ o.total | tl }}</strong></td>
-              <td><span class="pill" [class]="'pill-' + o.status">{{ labels[o.status] }}</span></td>
+              <td>
+                <span class="pill" [class]="'pill-' + o.status">{{ labels[o.status] }}</span>
+                @if (o.returnRequested) { <span class="pill pill-Returned">İade talebi</span> }
+              </td>
             </tr>
           } @empty {
             <tr><td colspan="6" class="text-muted">Sipariş bulunamadı.</td></tr>
@@ -78,8 +81,15 @@
         <dt class="t">Toplam</dt><dd class="t">{{ o.total | tl }}</dd>
       </dl>
 
+      @if (o.returnRequestedAt) {
+        <div class="alert" style="margin-top: 12px">
+          <strong>İade talebi</strong> · {{ o.returnRequestedAt | date: 'd MMM y HH:mm' }}<br>{{ o.returnReason }}
+          <br><small>Ürün elinize ulaşınca durumu "İade" yapın; stok otomatik geri eklenir.</small>
+        </div>
+      }
+
       <div class="addr">
-        <strong>Teslimat</strong><br>
+        <strong>Teslimat</strong> · {{ o.isMember ? 'Üye' : 'Misafir' }}<br>
         {{ o.customerName }} · {{ o.phone }}<br>
         {{ o.email }}<br>
         {{ o.address }}, {{ o.city }}

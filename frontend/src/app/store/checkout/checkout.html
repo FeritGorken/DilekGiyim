@@ -17,6 +17,14 @@
     <h1>Teslimat ve Ödeme</h1>
     <div class="layout">
       <form #f="ngForm" class="form" (ngSubmit)="submit(f)" novalidate>
+        @if (account.me() === null) {
+          <div class="alert info member">
+            <span>Hesabınız var mı? Giriş yaparak bilgilerinizi otomatik doldurun.</span>
+            <a routerLink="/hesap/giris" [queryParams]="{ returnUrl: '/odeme' }">Giriş yap</a>
+          </div>
+        } @else if (prefilled()) {
+          <div class="alert info member"><span>Bilgileriniz kayıtlı varsayılan adresinizden dolduruldu.</span></div>
+        }
         <fieldset>
           <legend>Teslimat bilgileri</legend>
           <div class="grid">

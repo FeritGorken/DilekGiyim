@@ -15,6 +15,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<StoreSettings> Settings => Set<StoreSettings>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerAddress> CustomerAddresses => Set<CustomerAddress>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -50,6 +55,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.PaidAmount).HasPrecision(18, 2);
             e.HasIndex(x => x.PaymentToken);
             e.HasIndex(x => x.Status);
+            e.HasIndex(x => x.CustomerId);
             e.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -65,6 +71,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Value).HasPrecision(18, 2);
             e.Property(x => x.MinCartTotal).HasPrecision(18, 2);
         });
+
+        b.Entity<AdminUser>(e =>
+        {
+            e.HasIndex(x => x.UserName).IsUnique();
+            e.HasIndex(x => x.Email).IsUnique();
+        });
+
+        b.Entity<Customer>(e =>
+        {
+            e.HasIndex(x => x.Email).IsUnique();
+            e.HasMany(x => x.Addresses).WithOne().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<Favorite>(e =>
+        {
+            e.HasKey(x => new { x.CustomerId, x.ProductId });
+            e.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        b.Entity<PasswordResetToken>().HasIndex(x => x.TokenHash).IsUnique();
 
         b.Entity<StoreSettings>(e =>
         {

@@ -1,0 +1,56 @@
+<div class="page">
+  <aside class="brand">
+    <img src="/images/trench-collar.jpg" alt="">
+    <div class="brand-top">
+      <div class="logo">dilek<span>giyim</span></div>
+      <div class="sub">YÖNETİM PANELİ</div>
+    </div>
+    <div class="brand-bottom">
+      <div class="headline">Siparişler, stok ve fiyatlar tek yerde.</div>
+      <p>Bu alan yalnızca Dilek Giyim yetkilileri içindir. Tüm girişler kayıt altına alınır.</p>
+    </div>
+  </aside>
+
+  <main class="form-side">
+    <div class="box">
+      @if (view() === 'login') {
+        <h1>Giriş yap</h1>
+        <p class="lead">Yönetici hesabınızla devam edin.</p>
+
+        @if (error(); as e) {
+          <div class="alert" [class.locked]="e.locked" role="alert">{{ e.text }}</div>
+        }
+
+        <form (ngSubmit)="submit()" novalidate>
+          <label class="field">E-posta veya kullanıcı adı
+            <input class="input" name="userName" autocomplete="username" [class.invalid]="error() && !error()!.locked" [(ngModel)]="form.userName">
+          </label>
+          <label class="field">Şifre
+            <span class="pw">
+              <input class="input" name="password" autocomplete="current-password" [type]="showPassword() ? 'text' : 'password'" [class.invalid]="error() && !error()!.locked" [(ngModel)]="form.password">
+              <button type="button" [attr.aria-label]="showPassword() ? 'Şifreyi gizle' : 'Şifreyi göster'" (click)="showPassword.set(!showPassword())">{{ showPassword() ? 'Gizle' : 'Göster' }}</button>
+            </span>
+          </label>
+          <div class="row">
+            <label class="check"><input type="checkbox" name="remember" [(ngModel)]="form.remember">Bu cihazda 7 gün açık kalsın</label>
+            <button type="button" class="link" (click)="setView('forgot')">Şifremi unuttum</button>
+          </div>
+          <button type="submit" class="submit" [disabled]="busy()">{{ busy() ? 'Kontrol ediliyor…' : 'GİRİŞ YAP' }}</button>
+        </form>
+
+        <p class="note">Güvenliğiniz için 5 hatalı denemeden sonra hesap 15 dakika kilitlenir. Ortak bilgisayarlarda "açık kalsın" seçeneğini kullanmayın.</p>
+      } @else {
+        <button type="button" class="back" (click)="setView('login')">← Girişe dön</button>
+        <h1>Şifre sıfırlama</h1>
+        <p class="lead">Hesabınıza kayıtlı e-posta adresini yazın. Hesap varsa 30 dakika geçerli bir sıfırlama bağlantısı gönderilir.</p>
+        <form (ngSubmit)="sendReset()">
+          <label class="field">E-posta
+            <input class="input" type="email" name="email" autocomplete="email" [(ngModel)]="forgotEmail">
+          </label>
+          <button type="submit" class="submit" [disabled]="busy() || !forgotEmail">BAĞLANTI GÖNDER</button>
+        </form>
+        @if (info(); as i) { <div class="alert success" role="status">{{ i }}</div> }
+      }
+    </div>
+  </main>
+</div>

@@ -3,6 +3,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
+import { AccountService } from '../../core/account.service';
 import { CartService } from '../../core/cart.service';
 import { CheckoutResult, PAYMENT_METHODS } from '../../core/models';
 import { TlPipe } from '../../core/tl.pipe';
@@ -16,6 +17,7 @@ import { CheckoutHeader } from '../checkout-header';
 })
 export class CheckoutPage implements OnInit {
   protected readonly cart = inject(CartService);
+  protected readonly account = inject(AccountService);
 
   protected form = {
     customerName: '',
@@ -41,9 +43,27 @@ export class CheckoutPage implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly result = signal<CheckoutResult | null>(null);
   protected readonly redirecting = signal(false);
+  protected readonly prefilled = signal(false);
 
   ngOnInit(): void {
     this.cart.refresh();
+    // Üye ise bilgileri ve varsayılan adresi doldur
+    const fill = () => {
+      const me = this.account.me();
+      if (!me) return;
+      this.form.customerName ||= `${me.firstName} ${me.lastName}`;
+      this.form.email ||= me.email;
+      this.form.phone ||= me.phone;
+      this.account.addresses().subscribe((list) => {
+        const a = list.find((x) => x.isDefault) ?? list[0];
+        if (!a) return;
+        this.form.city ||= a.city;
+        this.form.address ||= `${a.line}, ${a.district}`;
+        this.prefilled.set(true);
+      });
+    };
+    if (this.account.me() === undefined) this.account.check().subscribe(fill);
+    else fill();
   }
 
   protected submit(f: NgForm): void {

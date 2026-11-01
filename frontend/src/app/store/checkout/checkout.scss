@@ -213,3 +213,17 @@ dl {
     color: var(--text-2);
   }
 }
+
+.member {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+
+  a {
+    font-weight: 500;
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}

@@ -1,0 +1,174 @@
+.page {
+  padding-top: 56px;
+}
+
+.cols {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  align-items: stretch;
+}
+
+.card {
+  flex: 1 1 420px;
+  min-width: 0;
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+
+  &.cream {
+    border-color: transparent;
+    background: var(--cream);
+
+    .input {
+      background: #fff;
+    }
+  }
+
+  h1,
+  h2 {
+    margin: 10px 0 0;
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 42px;
+  }
+
+  form {
+    margin-top: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  @media (max-width: 520px) {
+    padding: 24px;
+  }
+}
+
+.input {
+  height: 50px;
+}
+
+.grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px !important;
+
+  .span2 {
+    grid-column: span 2;
+  }
+
+  small {
+    font-weight: 400;
+    font-size: 12px;
+  }
+}
+
+.pw {
+  position: relative;
+  display: flex;
+
+  .input {
+    padding-right: 76px;
+  }
+
+  button {
+    position: absolute;
+    right: 4px;
+    top: 3px;
+    height: 44px;
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+    font-size: 13px;
+    color: var(--text-2);
+    cursor: pointer;
+  }
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.link,
+.back {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.link {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.back {
+  color: var(--text-2);
+}
+
+.lead {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.foot {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #f0ebe3;
+  font-size: 14px;
+  color: var(--text-2);
+
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}
+
+.perks {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 14px;
+  color: var(--ink-2);
+
+  li::before {
+    content: '· ';
+  }
+}
+
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+
+  input {
+    margin-top: 2px;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  a {
+    text-decoration: underline;
+  }
+}

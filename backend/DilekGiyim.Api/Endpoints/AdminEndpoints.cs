@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DilekGiyim.Api.Endpoints;
 
-/// <summary>Yönetim paneli uç noktaları. Hepsi X-Admin-Key başlığı ister.</summary>
+/// <summary>Yönetim paneli uç noktaları. Hepsi admin oturumu ister (AdminAuthEndpoints ile giriş).</summary>
 public static class AdminEndpoints
 {
     private static readonly TimeZoneInfo Istanbul = TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul");
@@ -17,11 +17,8 @@ public static class AdminEndpoints
     public static void MapAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var admin = app.MapGroup("/api/admin")
-            .AddEndpointFilter<AdminKeyFilter>()
+            .RequireAuthorization(AuthSetup.AdminPolicy)
             .WithTags("Admin");
-
-        // Giriş kontrolü: anahtar doğruysa 200 döner
-        admin.MapGet("/me", () => Results.Ok(new { ok = true }));
 
         MapDashboard(admin);
         MapOrders(admin);
@@ -340,14 +337,16 @@ public static class AdminEndpoints
     }
 
     private static OrderSummaryDto ToSummary(Order o) =>
-        new(o.Id, o.OrderNo, o.CreatedAt, o.CustomerName, o.Lines.Sum(l => l.Quantity), o.PaymentMethod, o.Total, o.Status, o.PaymentState);
+        new(o.Id, o.OrderNo, o.CreatedAt, o.CustomerName, o.Lines.Sum(l => l.Quantity), o.PaymentMethod, o.Total, o.Status, o.PaymentState,
+            o.ReturnRequestedAt is not null && o.Status == OrderStatus.Delivered);
 
     private static OrderDetailDto ToDetail(Order o) =>
         new(o.Id, o.OrderNo, o.CreatedAt, o.Status, o.CustomerName, o.Email, o.Phone, o.Address, o.City,
             o.PaymentMethod, o.Installments, o.Subtotal, o.Discount, o.Shipping, o.Total,
             o.CouponCode, o.TrackingNo, o.Note,
             o.Lines.Select(l => new OrderLineDto(l.ProductName, l.ColorName, l.Size, l.Sku, l.UnitPrice, l.Quantity, l.UnitPrice * l.Quantity)).ToList(),
-            o.PaymentState, o.PaymentProvider, o.PaymentId, o.PaidAmount, o.PaidAt, o.PaymentError);
+            o.PaymentState, o.PaymentProvider, o.PaymentId, o.PaidAmount, o.PaidAt, o.PaymentError,
+            o.CustomerId is not null, o.DeliveredAt, o.ReturnRequestedAt, o.ReturnReason);
 
     private static AdminProductDto ToAdminProduct(Product p) =>
         new(p.Id, p.Name, p.Slug, p.Code, p.Description, p.FabricAndCare, p.CategoryId,

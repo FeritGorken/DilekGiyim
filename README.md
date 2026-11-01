@@ -16,8 +16,10 @@ Dilek Giyim için e-ticaret sitesi ve yönetim paneli.
 - Sepet: adet değiştirme, indirim kodu, ücretsiz kargo çubuğu (`/sepet`)
 - Teslimat ve ödeme: kart (3D Secure, taksit), havale/EFT veya kapıda ödeme (`/odeme`)
 - Ödeme sonucu sayfası (`/odeme/sonuc`)
+- Müşteri hesabı: giriş / üye ol / şifremi unuttum (`/hesap/giris`), siparişlerim (iptal, iade talebi), favoriler, adresler, hesap bilgileri (`/hesap`)
+- Üye olmadan sipariş takibi (`/siparis-takip`)
 
-**Yönetim paneli** (`/admin`)
+**Yönetim paneli** (`/admin`, giriş: `/admin/giris`)
 - Genel bakış: ciro, sipariş, ortalama sepet, kritik stok, günlük satış, son siparişler
 - Siparişler: duruma göre filtre, detay, durum ve kargo takip no güncelleme
 - Stok takibi: renk/beden bazında stok, hızlı düzeltme, stok girişi, stok hareketleri
@@ -31,6 +33,19 @@ Dilek Giyim için e-ticaret sitesi ve yönetim paneli.
 - **Kritik stok:** varyant stoğu ürünün "kritik eşiği"ne eşit veya altındaysa kritik, 0 ise tükendi sayılır.
 - **Sitede "Son X ürün" uyarısı** ürün kartındaki eşik değerine göre gösterilir; gerçek stok miktarı müşteriye açılmaz.
 - **İndirim kodu:** yüzde veya tutar, alt sepet limiti, kullanım limiti ve tarih aralığı desteklenir.
+
+## Giriş ve hesaplar
+
+- **Admin ve müşteri oturumları ayrıdır** ve sunucuda tutulur: tarayıcıda yalnızca `HttpOnly` + `SameSite=Strict` çerez bulunur (JavaScript okuyamaz, başka sitelerden gönderilemez). Canlıda çerezler yalnızca https ile gider.
+- **Şifreler** ASP.NET Core Identity'nin `PasswordHasher`'ı ile (PBKDF2, tuzlu) saklanır. Kural: en az 8 karakter, bir harf ve bir rakam.
+- **Kaba kuvvet koruması:** 5 hatalı denemede hesap 15 dakika kilitlenir; giriş/üyelik/şifre sıfırlama uç noktalarında IP başına dakikada 10 istek sınırı vardır.
+- **Şifre değişince** o hesabın diğer cihazlardaki oturumları kapanır.
+- **Şifre sıfırlama** bağlantısı 30 dakika geçerli ve tek kullanımlıktır; veritabanında bağlantının kendisi değil özeti saklanır. "Şifremi unuttum" yanıtı, e-postanın kayıtlı olup olmadığını belli etmez.
+- **İlk yönetici** hesabı, hiç yönetici yoksa `Admin:InitialUser`, `Admin:InitialEmail`, `Admin:InitialPassword` ayarlarından oluşturulur. Geliştirmede: kullanıcı `dilek`, şifre `Gelistirme2026`. Giriş yaptıktan sonra sağ alttaki adınıza tıklayıp şifreyi değiştirebilirsiniz.
+- Üye giriş yapmışsa sipariş hesabına bağlanır; misafir sipariş de mümkündür. Üye, kargoya verilene kadar siparişini iptal edebilir, teslimden sonra 14 gün içinde iade talebi açabilir (talep admin sipariş detayında görünür).
+
+### E-postalar
+Sipariş onayı ve şifre sıfırlama e-postaları şimdilik **gönderilmez, sunucu kaydına (konsola) yazılır** (`Services/EmailSender.cs`). Geliştirmede şifre sıfırlama bağlantısını konsoldan kopyalayabilirsiniz. Gerçek gönderim için `IEmailSender`'ı uygulayan bir sınıf (SMTP, SendGrid, Amazon SES…) yazılıp `Program.cs`'te değiştirilmeli.
 
 ## Kartla ödeme
 
@@ -110,11 +125,14 @@ npm start
 Geliştirmede `/api` istekleri `proxy.conf.json` ile backend'e gider.
 
 **Yönetim paneli:** http://localhost:4200/admin
-Geliştirme anahtarı: `gelistirme-admin-anahtari` (`appsettings.Development.json` içinde).
+Geliştirme girişi: kullanıcı `dilek`, şifre `Gelistirme2026` (`appsettings.Development.json` içinde).
 
 ## Canlıya çıkmadan önce yapılacaklar
 
-- [ ] **Admin girişi:** Şu anki anahtarlı giriş geçici. Kullanıcı adı/şifreli gerçek kimlik doğrulama eklenmeli. Canlıda `Admin__ApiKey` ortam değişkeni güçlü bir değerle verilmeli (`appsettings.json` içinde boş bırakıldı).
+- [ ] **İlk yönetici:** Canlıda `Admin__InitialUser`, `Admin__InitialEmail`, `Admin__InitialPassword` ortam değişkenleriyle ilk hesabı oluşturun, girişten sonra şifreyi değiştirip bu değişkenleri kaldırın.
+- [ ] **E-posta servisi:** Sipariş onayı ve şifre sıfırlama için gerçek gönderim (`IEmailSender`).
+- [ ] **Oturum anahtarları:** Birden fazla sunucu veya yeniden başlatmalarda oturumların düşmemesi için ASP.NET Core Data Protection anahtarlarının kalıcı bir yerde saklanması.
+- [ ] Birden fazla yönetici için kullanıcı yönetimi ekranı (şimdilik tek ilk yönetici; yenisi veritabanından eklenir).
 - [ ] **Ödeme:** Ödeme kuruluşuyla üye işyeri anlaşması yapılmalı; canlı anahtarlar ve `Payment:PublicBaseUrl` ayarlanmalı. Kartla ödeme iadeleri şimdilik ödeme kuruluşu panelinden yapılıyor.
 - [ ] **Veritabanı:** SQLite geliştirme içindir. Canlıda SQL Server veya PostgreSQL'e geçilip EF Core migration'ları kullanılmalı (`EnsureCreated` yerine).
 - [ ] **Görsel yükleme:** Ürün görselleri şimdilik adres (URL) olarak ekleniyor; dosya yükleme uç noktası eklenmeli.
