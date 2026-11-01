@@ -16,9 +16,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-// Veritabanı: geliştirmede SQLite dosyası. Canlıda bağlantı dizesi değiştirilerek SQL Server / PostgreSQL kullanılabilir.
+// Veritabanı: "Database:Provider" = "SqlServer" (MS SQL) veya "Sqlite" (tek dosya)
+var dbProvider = builder.Configuration["Database:Provider"] ?? "Sqlite";
+var connectionString = builder.Configuration.GetConnectionString("Default");
 builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=dilekgiyim.db"));
+{
+    if (dbProvider.Equals("SqlServer", StringComparison.OrdinalIgnoreCase))
+        // Not: EnableRetryOnFailure, siparişte kullanılan elle açılan transaction ile birlikte çalışmadığı için açılmadı
+        o.UseSqlServer(connectionString ?? throw new InvalidOperationException("ConnectionStrings:Default ayarlanmamış."));
+    else
+        o.UseSqlite(connectionString ?? "Data Source=dilekgiyim.db");
+});
 
 builder.Services.AddDgAuth(builder.Environment);
 builder.Services.AddSingleton<IEmailSender, LogEmailSender>();

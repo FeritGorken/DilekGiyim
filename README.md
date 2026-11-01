@@ -112,9 +112,18 @@ cd backend/DilekGiyim.Api
 dotnet run
 ```
 
-İlk çalıştırmada `dilekgiyim.db` (SQLite) oluşturulur ve örnek ürünlerle doldurulur. Sıfırlamak için dosyayı silip tekrar çalıştırın.
+### Veritabanı
 
-> Veri modeli değiştiğinde (örn. ödeme alanları eklendiğinde) eski `dilekgiyim.db` dosyasını silin; şimdilik migration kullanılmıyor.
+`Database:Provider` ayarıyla seçilir:
+
+| Provider | Bağlantı (ConnectionStrings:Default) | Not |
+|---|---|---|
+| `SqlServer` (geliştirmede varsayılan) | `Server=(localdb)\MSSQLLocalDB;Database=DilekGiyim;Trusted_Connection=True;TrustServerCertificate=True` | Visual Studio ile gelen LocalDB. SQL Server Express kullanıyorsanız `Server=localhost\SQLEXPRESS;...` |
+| `Sqlite` | `Data Source=dilekgiyim.db` | Tek dosya; kurulum gerektirmez |
+
+İlk çalıştırmada veritabanı ve tablolar oluşturulur, örnek ürünlerle doldurulur. SQL Server'ı **SQL Server Management Studio** veya Visual Studio'daki **SQL Server Object Explorer** ile görüntüleyebilirsiniz.
+
+> Şimdilik migration kullanılmıyor (`EnsureCreated`). Veri modeli değiştiğinde geliştirme veritabanını silip yeniden oluşturun (SSMS'te `DilekGiyim` veritabanını silin veya SQLite'ta `.db` dosyasını silin). Canlıya çıkmadan önce EF Core migration'larına geçilecek.
 
 **2. Frontend** (http://localhost:4200)
 

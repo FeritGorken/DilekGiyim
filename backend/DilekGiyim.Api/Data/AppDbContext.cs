@@ -23,10 +23,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder b)
     {
-        b.Entity<Category>().HasIndex(x => x.Slug).IsUnique();
+        // İndekslenen metin alanlarına uzunluk sınırı (SQL Server nvarchar(max) üzerinde indeks kurmaz)
+        b.Entity<Category>(e =>
+        {
+            e.Property(x => x.Slug).HasMaxLength(120);
+            e.Property(x => x.Name).HasMaxLength(120);
+            e.HasIndex(x => x.Slug).IsUnique();
+        });
 
         b.Entity<Product>(e =>
         {
+            e.Property(x => x.Slug).HasMaxLength(200);
+            e.Property(x => x.Code).HasMaxLength(60);
+            e.Property(x => x.Name).HasMaxLength(200);
             e.HasIndex(x => x.Slug).IsUnique();
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Price).HasPrecision(18, 2);
@@ -40,6 +49,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         b.Entity<ProductVariant>(e =>
         {
+            e.Property(x => x.Sku).HasMaxLength(80);
+            e.Property(x => x.ColorName).HasMaxLength(60);
+            e.Property(x => x.ColorHex).HasMaxLength(9);
+            e.Property(x => x.Size).HasMaxLength(20);
             e.HasIndex(x => x.Sku).IsUnique();
             // Aynı üründe aynı renk + beden iki kez olamaz
             e.HasIndex(x => new { x.ProductId, x.ColorName, x.Size }).IsUnique();
@@ -47,6 +60,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         b.Entity<Order>(e =>
         {
+            e.Property(x => x.OrderNo).HasMaxLength(20);
+            e.Property(x => x.PaymentToken).HasMaxLength(200);
+            e.Property(x => x.PublicKey).HasMaxLength(64);
             e.HasIndex(x => x.OrderNo).IsUnique();
             e.Property(x => x.Subtotal).HasPrecision(18, 2);
             e.Property(x => x.Discount).HasPrecision(18, 2);
@@ -67,6 +83,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         b.Entity<Coupon>(e =>
         {
+            e.Property(x => x.Code).HasMaxLength(40);
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Value).HasPrecision(18, 2);
             e.Property(x => x.MinCartTotal).HasPrecision(18, 2);
@@ -74,12 +91,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         b.Entity<AdminUser>(e =>
         {
+            e.Property(x => x.UserName).HasMaxLength(100);
+            e.Property(x => x.Email).HasMaxLength(200);
             e.HasIndex(x => x.UserName).IsUnique();
             e.HasIndex(x => x.Email).IsUnique();
         });
 
         b.Entity<Customer>(e =>
         {
+            e.Property(x => x.Email).HasMaxLength(200);
             e.HasIndex(x => x.Email).IsUnique();
             e.HasMany(x => x.Addresses).WithOne().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
         });
@@ -91,7 +111,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Cascade);
         });
 
-        b.Entity<PasswordResetToken>().HasIndex(x => x.TokenHash).IsUnique();
+        b.Entity<PasswordResetToken>(e =>
+        {
+            e.Property(x => x.TokenHash).HasMaxLength(64);
+            e.HasIndex(x => x.TokenHash).IsUnique();
+        });
 
         b.Entity<StoreSettings>(e =>
         {
