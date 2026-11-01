@@ -147,10 +147,10 @@ public class StockMovement
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
-/// <summary>Sepet ve kargo kuralları. Tek satır (Id = 1).</summary>
+/// <summary>Sepet ve kargo kuralları. Tabloda tek satır bulunur (kimliği veritabanı verir).</summary>
 public class StoreSettings
 {
-    public int Id { get; set; } = 1;
+    public int Id { get; set; }
     public decimal FreeShippingThreshold { get; set; } = 3000m;
     public decimal ShippingFee { get; set; } = 89.90m;
     public decimal MinOrderTotal { get; set; }
