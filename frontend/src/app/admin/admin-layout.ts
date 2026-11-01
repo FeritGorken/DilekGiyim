@@ -10,7 +10,7 @@ import { AdminAuthService } from './admin-auth';
   template: `
     <div class="shell">
       <aside class="side">
-        <a routerLink="/" class="logo">dilek<span>giyim</span></a>
+        <a routerLink="/" class="logo" aria-label="Siteye git"><img src="/images/dilek-logo.png" alt="Dilek 1968" width="56" height="56"></a>
         <div class="sub">YÖNETİM PANELİ</div>
         <nav aria-label="Yönetim menüsü">
           <a routerLink="/admin" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page">Genel Bakış</a>
@@ -36,8 +36,8 @@ import { AdminAuthService } from './admin-auth';
   styles: `
     .shell { min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--admin-bg); }
     .side { flex: 1 0 240px; max-width: 100%; padding: 24px 16px; background: var(--ink); color: #cfc5b8; display: flex; flex-direction: column; }
-    .logo { padding: 0 12px 4px; font-family: var(--serif); font-size: 32px; font-weight: 600; line-height: 1; color: var(--cream); }
-    .logo span { color: var(--accent-light); font-weight: 500; }
+    .logo { display: flex; padding: 0 12px 10px; }
+    .logo img { width: 56px; height: 56px; }
     .sub { padding: 0 12px; font-size: 11px; letter-spacing: .28em; color: #a99e91; }
     nav { margin-top: 28px; display: flex; flex-direction: column; gap: 2px; }
     nav a { display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 6px; font-size: 15px; color: #cfc5b8; }

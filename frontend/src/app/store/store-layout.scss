@@ -43,45 +43,23 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 20px 40px;
-  padding-top: 22px;
-  padding-bottom: 22px;
+  padding-top: 14px;
+  padding-bottom: 14px;
 }
 
 .logo {
   display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
+  align-items: center;
 
-.logo-word {
-  font-family: var(--serif);
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--ink);
-
-  span {
-    color: var(--accent);
-    font-style: italic;
-    font-weight: 500;
-  }
-
-  &.light {
-    font-size: 34px;
-    color: var(--cream);
-
-    span {
-      color: var(--accent-light);
-    }
+  img {
+    width: 76px;
+    height: 76px;
   }
 }
 
-.logo-tag {
-  margin-top: 6px;
-  font-size: 10px;
-  letter-spacing: 0.32em;
-  text-transform: uppercase;
-  color: var(--muted);
+.footer-logo {
+  width: 72px;
+  height: 72px;
 }
 
 .search {

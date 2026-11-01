@@ -38,15 +38,9 @@
 }
 
 .logo {
-  font-family: var(--serif);
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 1;
-
-  span {
-    color: var(--accent-light);
-    font-weight: 500;
-  }
+  display: block;
+  width: 80px;
+  height: 80px;
 }
 
 .sub {

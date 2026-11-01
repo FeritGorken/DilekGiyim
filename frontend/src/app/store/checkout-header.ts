@@ -8,7 +8,7 @@ import { RouterLink } from '@angular/router';
   template: `
     <header>
       <div class="container inner">
-        <a routerLink="/" class="logo" aria-label="Dilek Giyim ana sayfa">dilek<span>giyim</span></a>
+        <a routerLink="/" class="logo" aria-label="Dilek Giyim ana sayfa"><img src="/images/dilek-logo.png" alt="Dilek 1968" width="60" height="60"></a>
         <ol aria-label="Sipariş adımları">
           <li [class.on]="step() === 1">1. SEPET</li>
           <li [class.on]="step() === 2">2. TESLİMAT VE ÖDEME</li>
@@ -23,9 +23,9 @@ import { RouterLink } from '@angular/router';
   `,
   styles: `
     header { border-bottom: 1px solid var(--line); }
-    .inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 20px; padding-bottom: 20px; }
-    .logo { font-family: var(--serif); font-size: 38px; font-weight: 600; line-height: 1; }
-    .logo span { color: var(--accent); font-style: italic; font-weight: 500; }
+    .inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding-top: 12px; padding-bottom: 12px; }
+    .logo { display: flex; }
+    .logo img { width: 60px; height: 60px; }
     ol { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 14px; letter-spacing: .08em; color: var(--muted); }
     li.on { color: var(--ink); font-weight: 600; }
     .secure { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }

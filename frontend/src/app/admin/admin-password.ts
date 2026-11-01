@@ -12,7 +12,7 @@ import { AdminAuthService } from './admin-auth';
   template: `
     <main class="wrap">
       <form class="box" (ngSubmit)="submit()">
-        <div class="logo">dilek<span>giyim</span></div>
+        <img src="/images/dilek-logo.png" alt="Dilek 1968" width="64" height="64">
         <h1>Yeni şifre belirle</h1>
         @if (done()) {
           <div class="alert success" role="status">{{ done() }}</div>
@@ -34,8 +34,6 @@ import { AdminAuthService } from './admin-auth';
   styles: `
     .wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--admin-bg); }
     .box { width: 100%; max-width: 400px; padding: 32px; border-radius: 10px; background: #fff; border: 1px solid var(--admin-line); display: flex; flex-direction: column; gap: 16px; }
-    .logo { font-family: var(--serif); font-size: 34px; font-weight: 600; line-height: 1; }
-    .logo span { color: var(--accent); font-weight: 500; }
     h1 { margin: 0; font-family: var(--serif); font-size: 32px; font-weight: 600; }
     small { font-weight: 400; font-size: 12px; }
   `
