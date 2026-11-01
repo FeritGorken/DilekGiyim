@@ -1,0 +1,168 @@
+.grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.adm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.row3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.compact td,
+.compact th {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.table-wrap {
+  margin: 0 -20px;
+}
+
+.r {
+  text-align: right;
+}
+
+.wide {
+  width: 100%;
+}
+
+.small {
+  height: 38px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.campaigns {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0ebe3;
+  }
+
+  .desc {
+    margin-top: 2px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  .dates {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+}
+
+.new-campaign,
+.coupon-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coupon-form {
+  padding: 14px;
+  border-radius: 6px;
+  background: var(--admin-bg);
+}
+
+.upper {
+  text-transform: uppercase;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.usage {
+  font-size: 13px;
+}
+
+.bar {
+  margin-top: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: #efe9e0;
+
+  div {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+}
+
+.danger {
+  margin-left: 10px;
+  color: var(--danger);
+}
+
+.toggles {
+  margin-top: 8px;
+  border-top: 1px solid #f0ebe3;
+}
+
+.toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  font-size: 14px;
+
+  small {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+  }
+}
+
+form > .alert,
+form > .wide {
+  margin-top: 10px;
+}

@@ -1,0 +1,172 @@
+@if (model(); as m) {
+  <nav aria-label="Konum" class="text-muted crumbs"><a routerLink="/admin/urunler">Ürünler</a> / {{ m.id ? m.name : 'Yeni ürün' }}</nav>
+  <div class="head">
+    <h1 class="adm-title">{{ m.id ? 'Ürün Düzenle' : 'Yeni Ürün' }}</h1>
+    <div class="tools">
+      @if (m.id && m.isPublished) { <a class="adm-btn" [routerLink]="['/urun', m.slug]" target="_blank">Sitede görüntüle</a> }
+      @if (m.id) { <button type="button" class="adm-btn danger" (click)="remove(m)">Sil</button> }
+      <button type="button" class="adm-btn primary" [disabled]="saving()" (click)="save(m)">{{ saving() ? 'Kaydediliyor…' : 'Kaydet' }}</button>
+    </div>
+  </div>
+
+  @if (message(); as msg) { <div class="alert" [class.success]="msg.ok" role="status" style="margin-top: 16px">{{ msg.text }}</div> }
+
+  <div class="layout">
+    <div class="main">
+      <!-- Temel bilgiler -->
+      <section class="adm-card" aria-labelledby="s1">
+        <h2 id="s1">Temel bilgiler</h2>
+        <div class="grid2">
+          <label class="field span2">Ürün adı
+            <input class="input" name="name" [(ngModel)]="m.name">
+          </label>
+          <label class="field">Kategori
+            <select class="select" name="cat" [(ngModel)]="m.categoryId">
+              <option [ngValue]="0" disabled>Seçin</option>
+              @for (c of categories(); track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+            </select>
+          </label>
+          <label class="field">Ürün kodu
+            <input class="input" name="code" placeholder="DG-TR-2601" [(ngModel)]="m.code">
+          </label>
+          <label class="field span2">Açıklama
+            <textarea class="textarea" name="desc" rows="4" [(ngModel)]="m.description"></textarea>
+          </label>
+          <label class="field span2">Kumaş ve bakım
+            <input class="input" name="fabric" [(ngModel)]="m.fabricAndCare">
+          </label>
+        </div>
+      </section>
+
+      <!-- Görseller -->
+      <section class="adm-card" aria-labelledby="s2">
+        <div class="card-head"><h2 id="s2">Görseller</h2><span class="text-muted">İlk görsel kapak olarak kullanılır</span></div>
+        <div class="images">
+          @for (url of m.imageUrls; track $index; let i = $index) {
+            <div class="img" [class.cover]="i === 0">
+              <img [src]="url" alt="">
+              @if (i === 0) { <span class="cover-tag">Kapak</span> }
+              <div class="img-tools">
+                @if (i > 0) { <button type="button" (click)="makeCover(m, i)">Kapak yap</button> }
+                <button type="button" (click)="removeImage(m, i)">Kaldır</button>
+              </div>
+            </div>
+          }
+        </div>
+        <form class="inline" (ngSubmit)="addImage(m)">
+          <label for="img" class="sr-only">Görsel adresi</label>
+          <input id="img" name="img" class="input" placeholder="/images/urun.jpg veya https://…" [(ngModel)]="newImage">
+          <button type="submit" class="adm-btn">Görsel ekle</button>
+        </form>
+      </section>
+
+      <!-- Fiyatlandırma -->
+      <section class="adm-card" aria-labelledby="s3">
+        <h2 id="s3">Fiyatlandırma</h2>
+        <div class="grid4">
+          <label class="field">Satış fiyatı (KDV dahil)
+            <input class="input" type="number" min="0" step="0.01" name="price" [(ngModel)]="m.price">
+          </label>
+          <label class="field">İndirimli fiyat
+            <input class="input" type="number" min="0" step="0.01" name="sale" placeholder="Boş = indirim yok" [(ngModel)]="m.salePrice">
+          </label>
+          <label class="field">Birim maliyet (KDV hariç)
+            <input class="input" type="number" min="0" step="0.01" name="cost" [(ngModel)]="m.cost">
+          </label>
+          <label class="field">KDV oranı
+            <select class="select" name="vat" [(ngModel)]="m.vatRate">
+              <option [ngValue]="0.1">%10</option>
+              <option [ngValue]="0.2">%20</option>
+            </select>
+          </label>
+        </div>
+        <div class="stats">
+          <div><small>Sitede görünen</small><strong>{{ tl(shownPrice(m)) }}</strong></div>
+          <div><small>İndirim oranı</small><strong>{{ discountText(m) }}</strong></div>
+          <div><small>Birim kâr (KDV hariç)</small><strong>{{ tl(profit(m)) }}</strong></div>
+          <div><small>Kâr marjı</small><strong [class.text-ok]="marginPct(m) >= 25" [class.text-danger]="marginPct(m) < 25">%{{ marginPct(m) }}</strong></div>
+        </div>
+      </section>
+
+      <!-- Varyantlar -->
+      <section class="adm-card" aria-labelledby="s4">
+        <h2 id="s4">Renk, beden ve stok</h2>
+        <div class="variant-tools">
+          <form class="inline" (ngSubmit)="addColor(m)">
+            <label for="cn" class="sr-only">Renk adı</label>
+            <input id="cn" name="cn" class="input" placeholder="Renk adı (örn. Haki gri)" [(ngModel)]="newColor.name">
+            <label for="ch" class="sr-only">Renk kodu</label>
+            <input id="ch" name="ch" type="color" class="color" [(ngModel)]="newColor.hex">
+            <button type="submit" class="adm-btn">+ Renk</button>
+          </form>
+          <form class="inline" (ngSubmit)="addSize(m)">
+            <label for="sz" class="sr-only">Beden</label>
+            <input id="sz" name="sz" class="input short" placeholder="Beden (örn. 46)" [(ngModel)]="newSize">
+            <button type="submit" class="adm-btn">+ Beden</button>
+          </form>
+        </div>
+
+        @if (m.variants.length) {
+          <div class="table-wrap">
+            <table class="matrix">
+              <thead>
+                <tr>
+                  <th>Renk</th>
+                  @for (s of sizes(m); track s) {
+                    <th>{{ s }} <button type="button" class="x" [attr.aria-label]="s + ' bedenini kaldır'" (click)="removeSize(m, s)">×</button></th>
+                  }
+                  <th class="right">Toplam</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of colors(m); track c.name) {
+                  <tr>
+                    <td>
+                      <span class="swatch" [style.background]="c.hex"></span> {{ c.name }}
+                      <button type="button" class="x" [attr.aria-label]="c.name + ' rengini kaldır'" (click)="removeColor(m, c.name)">×</button>
+                    </td>
+                    @for (s of sizes(m); track s) {
+                      <td>
+                        @if (cell(m, c.name, s); as v) {
+                          <input type="number" min="0" class="cell" [class]="stockClass(m, v)"
+                            [attr.aria-label]="c.name + ' ' + s + ' beden stok'"
+                            [name]="'st-' + c.name + '-' + s" [(ngModel)]="v.stock">
+                        } @else {
+                          <span class="text-muted">—</span>
+                        }
+                      </td>
+                    }
+                    <td class="right"><strong>{{ colorTotal(m, c.name) }}</strong></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="text-muted hint">Turuncu kutular kritik eşiğin altında, kırmızı kutular tükenmiş bedenleri gösterir. SKU boş bırakılırsa otomatik oluşturulur.</p>
+        } @else {
+          <p class="text-muted hint">Henüz renk/beden yok. Önce bir renk ekleyin.</p>
+        }
+      </section>
+    </div>
+
+    <aside class="aside">
+      <section class="adm-card" aria-labelledby="s5">
+        <h2 id="s5">Yayın durumu</h2>
+        <div class="toggle"><span>Sitede yayında</span><button type="button" role="switch" class="switch" aria-label="Sitede yayında" [attr.aria-checked]="m.isPublished" (click)="m.isPublished = !m.isPublished"></button></div>
+        <div class="toggle"><span>"Yeni" etiketi</span><button type="button" role="switch" class="switch" aria-label="Yeni etiketi" [attr.aria-checked]="m.isNew" (click)="m.isNew = !m.isNew"></button></div>
+        <div class="toggle"><span>Ana sayfada öne çıkar</span><button type="button" role="switch" class="switch" aria-label="Ana sayfada öne çıkar" [attr.aria-checked]="m.isFeatured" (click)="m.isFeatured = !m.isFeatured"></button></div>
+      </section>
+      <section class="adm-card" aria-labelledby="s6">
+        <h2 id="s6">Stok kuralları</h2>
+        <label class="field gap">Kritik stok eşiği (beden başına)
+          <input class="input" type="number" min="0" name="crit" [(ngModel)]="m.criticalThreshold">
+        </label>
+        <label class="field gap">Sitede "Son X ürün" uyarısı
+          <input class="input" type="number" min="0" name="low" [(ngModel)]="m.lowStockDisplay">
+        </label>
+      </section>
+    </aside>
+  </div>
+} @else {
+  <p class="text-muted">Yükleniyor…</p>
+}

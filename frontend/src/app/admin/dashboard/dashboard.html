@@ -1,0 +1,106 @@
+<div class="head">
+  <div>
+    <h1 class="adm-title">Genel Bakış</h1>
+    <div class="text-muted">{{ today | date: 'd MMMM y, EEEE' }}</div>
+  </div>
+  <div class="tools">
+    <label for="range" class="sr-only">Tarih aralığı</label>
+    <select id="range" class="select" [(ngModel)]="days" (ngModelChange)="load()">
+      <option [ngValue]="7">Son 7 gün</option>
+      <option [ngValue]="30">Son 30 gün</option>
+      <option [ngValue]="90">Son 90 gün</option>
+    </select>
+    <a routerLink="/admin/urunler/yeni" class="adm-btn primary">+ Yeni ürün</a>
+  </div>
+</div>
+
+@if (error()) { <div class="alert" style="margin-top: 16px">{{ error() }}</div> }
+
+@if (data(); as d) {
+  <div class="kpis">
+    <div class="adm-card kpi">
+      <div class="label">Ciro (son {{ days }} gün)</div>
+      <div class="value">{{ d.revenue | tl }}</div>
+      <div class="delta" [class.text-ok]="d.revenueChangePct >= 0" [class.text-danger]="d.revenueChangePct < 0">
+        {{ d.revenueChangePct >= 0 ? '▲' : '▼' }} %{{ d.revenueChangePct }} önceki döneme göre
+      </div>
+    </div>
+    <div class="adm-card kpi">
+      <div class="label">Sipariş</div>
+      <div class="value">{{ d.orderCount }}</div>
+      <div class="delta text-warn">{{ d.pendingOrders }} sipariş işlem bekliyor</div>
+    </div>
+    <div class="adm-card kpi">
+      <div class="label">Ortalama sepet</div>
+      <div class="value">{{ d.averageBasket | tl }}</div>
+    </div>
+    <div class="adm-card kpi">
+      <div class="label">Kritik stok</div>
+      <div class="value">{{ d.criticalCount + d.outOfStockCount }} varyant</div>
+      <div class="delta text-danger">{{ d.outOfStockCount }} varyant tükendi</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <section class="adm-card wide" aria-labelledby="sales">
+      <div class="card-head"><h2 id="sales">Günlük satış</h2><span class="text-muted">Son 14 gün</span></div>
+      <div class="chart" role="img" aria-label="Son 14 günün günlük satış tutarları">
+        @for (b of bars(); track $index) {
+          <div><span [style.height.%]="b.height" [title]="b.title"></span></div>
+        }
+      </div>
+      <div class="days">@for (b of bars(); track $index) { <span>{{ b.day }}</span> }</div>
+    </section>
+
+    <section class="adm-card" aria-labelledby="crit">
+      <div class="card-head"><h2 id="crit">Kritik stok</h2><a routerLink="/admin/stok">Tümü →</a></div>
+      <ul>
+        @for (c of d.critical; track c.variantId) {
+          <li>
+            <div>{{ c.productName }}<small>{{ c.colorName }} · {{ c.size }}</small></div>
+            <span class="pill" [class]="'pill-' + c.status">{{ c.stock === 0 ? 'Tükendi' : c.stock + ' adet' }}</span>
+          </li>
+        } @empty {
+          <li class="text-muted">Kritik seviyede ürün yok.</li>
+        }
+      </ul>
+    </section>
+  </div>
+
+  <div class="row">
+    <section class="adm-card wide" aria-labelledby="orders">
+      <div class="card-head"><h2 id="orders">Son siparişler</h2><a routerLink="/admin/siparisler">Tüm siparişler →</a></div>
+      <div class="table-wrap">
+        <table class="adm-table">
+          <thead><tr><th>Sipariş</th><th>Müşteri</th><th>Tarih</th><th>Tutar</th><th>Durum</th></tr></thead>
+          <tbody>
+            @for (o of d.recentOrders; track o.id) {
+              <tr>
+                <td><a [routerLink]="['/admin/siparisler']" [queryParams]="{ id: o.id }"><strong>#{{ o.orderNo }}</strong></a></td>
+                <td>{{ o.customerName }}</td>
+                <td class="text-muted">{{ o.createdAt | date: 'd MMM HH:mm' }}</td>
+                <td><strong>{{ o.total | tl }}</strong></td>
+                <td><span class="pill" [class]="'pill-' + o.status">{{ labels[o.status] }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="side">
+      <section class="adm-card" aria-labelledby="top">
+        <h2 id="top">En çok satanlar</h2>
+        <ul>
+          @for (t of d.topProducts; track t.name) {
+            <li><span>{{ t.name }}</span><strong>{{ t.quantity }} adet</strong></li>
+          } @empty {
+            <li class="text-muted">Bu dönemde satış yok.</li>
+          }
+        </ul>
+      </section>
+    </div>
+  </div>
+} @else if (!error()) {
+  <p class="text-muted">Yükleniyor…</p>
+}

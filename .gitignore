@@ -37,3 +37,8 @@ Thumbs.db
 .env
 .env.*
 *.pfx
+
+# ---------- Veritabanı (yerel SQLite) ----------
+*.db
+*.db-shm
+*.db-wal

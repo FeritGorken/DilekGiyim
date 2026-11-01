@@ -1,0 +1,292 @@
+.page {
+  padding-top: 40px;
+  padding-bottom: 80px;
+
+  h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 48px;
+
+    small {
+      font-size: 22px;
+      color: var(--muted);
+    }
+  }
+}
+
+.notice {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.empty {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.small {
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.layout {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.lines {
+  flex: 999 1 560px;
+  min-width: 0;
+
+  ul {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    gap: 20px;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+.ship {
+  padding: 18px 20px;
+  border-radius: 6px;
+  background: var(--cream);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.bar {
+  margin-top: 10px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+
+  div {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+}
+
+.thumb {
+  flex: 0 0 120px;
+  height: 160px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--cream-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--muted);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+  }
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+
+  h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 25px;
+    font-weight: 500;
+  }
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.variant {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.line-total {
+  text-align: right;
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  s {
+    display: block;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+}
+
+.bottom {
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.qty {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  border: 1px solid var(--line-3);
+  border-radius: 22px;
+
+  button {
+    width: 44px;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    min-width: 24px;
+    text-align: center;
+    font-weight: 500;
+  }
+}
+
+.remove {
+  color: var(--danger);
+}
+
+.continue {
+  display: inline-block;
+  margin-top: 24px;
+  padding-bottom: 4px;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--accent);
+}
+
+.summary {
+  flex: 1 1 340px;
+  min-width: 0;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+
+  h2 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 500;
+  }
+}
+
+.coupon {
+  margin-top: 20px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .row {
+    margin-top: 8px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .input {
+    text-transform: uppercase;
+  }
+
+  .apply {
+    height: 46px;
+    padding: 0 18px;
+    border: 1px solid var(--ink);
+    border-radius: 6px;
+    background: #fff;
+    font-weight: 500;
+    cursor: pointer;
+  }
+}
+
+dl {
+  margin: 22px 0 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 12px;
+  font-size: 15px;
+
+  dt {
+    color: var(--text-2);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+  }
+
+  .total {
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  dd.total {
+    font-size: 22px;
+    color: var(--accent);
+  }
+}
+
+.vat {
+  margin-top: 4px;
+  text-align: right;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.go {
+  margin-top: 22px;
+  width: 100%;
+}
+
+.perks {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--text-2);
+}

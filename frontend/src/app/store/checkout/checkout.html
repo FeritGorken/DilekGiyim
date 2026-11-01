@@ -1,0 +1,85 @@
+<app-checkout-header [step]="result() ? 3 : 2" />
+
+<main class="container page">
+  @if (result(); as r) {
+    <section class="done" aria-live="polite">
+      <h1>Teşekkürler, siparişiniz alındı.</h1>
+      <p>Sipariş numaranız <strong>#{{ r.orderNo }}</strong> · Toplam <strong>{{ r.total | tl }}</strong></p>
+      <p class="text-muted">Sipariş özeti e-posta adresinize gönderilecek.</p>
+      <a routerLink="/" class="btn btn-dark">Alışverişe devam et</a>
+    </section>
+  } @else if (cart.items().length === 0) {
+    <section class="done">
+      <h1>Sepetiniz boş</h1>
+      <a routerLink="/" class="btn btn-dark">Alışverişe başla</a>
+    </section>
+  } @else {
+    <h1>Teslimat ve Ödeme</h1>
+    <div class="layout">
+      <form #f="ngForm" class="form" (ngSubmit)="submit(f)" novalidate>
+        <fieldset>
+          <legend>Teslimat bilgileri</legend>
+          <div class="grid">
+            <label class="field span2">Ad Soyad *
+              <input class="input" name="customerName" required autocomplete="name" [(ngModel)]="form.customerName">
+            </label>
+            <label class="field">E-posta *
+              <input class="input" type="email" name="email" required email autocomplete="email" [(ngModel)]="form.email">
+            </label>
+            <label class="field">Telefon *
+              <input class="input" type="tel" name="phone" required autocomplete="tel" [(ngModel)]="form.phone">
+            </label>
+            <label class="field">İl *
+              <input class="input" name="city" required autocomplete="address-level1" [(ngModel)]="form.city">
+            </label>
+            <label class="field span2">Açık adres *
+              <textarea class="textarea" name="address" rows="3" required autocomplete="street-address" [(ngModel)]="form.address"></textarea>
+            </label>
+            <label class="field span2">Sipariş notu
+              <input class="input" name="note" [(ngModel)]="form.note">
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Ödeme yöntemi</legend>
+          @for (o of paymentOptions; track o.value) {
+            <label class="pay" [class.disabled]="o.disabled">
+              <input type="radio" name="paymentMethod" [value]="o.value" [disabled]="o.disabled" [(ngModel)]="form.paymentMethod">
+              <span><strong>{{ o.label }}</strong><small>{{ o.help }}</small></span>
+            </label>
+          }
+        </fieldset>
+
+        <label class="check">
+          <input type="checkbox" name="accept" [(ngModel)]="form.accept">
+          <span>Ön bilgilendirme formunu ve mesafeli satış sözleşmesini okudum, onaylıyorum.</span>
+        </label>
+
+        @if (error(); as e) { <div class="alert" role="alert">{{ e }}</div> }
+
+        <button type="submit" class="btn btn-dark submit" [disabled]="submitting()">
+          {{ submitting() ? 'Sipariş oluşturuluyor…' : 'Siparişi onayla' }}
+        </button>
+      </form>
+
+      @if (cart.quote(); as q) {
+        <aside class="summary" aria-labelledby="sum">
+          <h2 id="sum">Sipariş Özeti</h2>
+          <ul>
+            @for (l of q.lines; track l.variantId) {
+              <li><span>{{ l.productName }} <small>{{ l.colorName }} · {{ l.size }} · {{ l.quantity }} adet</small></span><span>{{ l.lineTotal | tl }}</span></li>
+            }
+          </ul>
+          <dl>
+            <dt>Ara toplam</dt><dd>{{ q.subtotal | tl }}</dd>
+            @if (q.discount > 0) { <dt>İndirim ({{ q.couponCode }})</dt><dd class="text-ok">−{{ q.discount | tl }}</dd> }
+            <dt>Kargo</dt><dd>{{ q.shipping === 0 ? 'Ücretsiz' : (q.shipping | tl) }}</dd>
+            <dt class="total">Toplam</dt><dd class="total">{{ q.total | tl }}</dd>
+          </dl>
+          <a routerLink="/sepet" class="back">← Sepete dön</a>
+        </aside>
+      }
+    </div>
+  }
+</main>

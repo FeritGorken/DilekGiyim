@@ -1,0 +1,94 @@
+<!-- Banner -->
+<section class="hero" aria-label="Öne çıkan koleksiyon">
+  <div class="container hero-inner">
+    <div class="hero-text">
+      <div class="eyebrow line">Sonbahar · Kış 2026</div>
+      <h1>Zamansız bir <em>duruş.</em></h1>
+      <p>Kemerli kruvaze trençkot: yumuşak dokulu kumaş, geniş yaka ve ayarlanabilir kuşak. Sezonun her gününe eşlik eden bir parça.</p>
+      <div class="hero-actions">
+        <a routerLink="/urun/kemerli-kruvaze-trenckot" class="btn btn-dark">Trençkotları keşfet</a>
+        <a routerLink="/urunler" class="btn btn-line">Yeni sezon</a>
+      </div>
+    </div>
+    <div class="hero-media">
+      <div class="arch">
+        <img src="/images/trench-full.jpg" alt="Haki gri kemerli kruvaze trençkot, manken üzerinde">
+        <a routerLink="/urun/kemerli-kruvaze-trenckot" class="arch-tag">Kemerli Kruvaze Trençkot</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Avantajlar -->
+<section class="container" aria-label="Alışveriş avantajları">
+  <div class="perks">
+    <div><strong class="serif">Ücretsiz Kargo</strong><span>{{ freeShipping() }}</span></div>
+    <div><strong class="serif">Kolay İade</strong><span>14 gün içinde</span></div>
+    <div><strong class="serif">Güvenli Ödeme</strong><span>3D Secure</span></div>
+    <div><strong class="serif">Taksit İmkânı</strong><span>Kredi kartına 6 taksit</span></div>
+  </div>
+</section>
+
+<!-- Öne çıkanlar -->
+<section class="container featured" aria-labelledby="featured">
+  <div class="featured-head">
+    <div>
+      <div class="eyebrow">Seçili ürünler</div>
+      <h2 id="featured" class="section-title">Öne çıkanlar</h2>
+    </div>
+    <div class="segmented" role="tablist" aria-label="Ürün listesi">
+      @for (t of tabs; track t.id) {
+        <button type="button" role="tab" [attr.aria-selected]="tab() === t.id" (click)="selectTab(t.id)">{{ t.label }}</button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="text-muted">Yükleniyor…</p>
+  } @else {
+    <div class="grid">
+      @for (p of products(); track p.id) {
+        <app-product-card [product]="p" />
+      } @empty {
+        <p class="text-muted">Bu listede şu an ürün yok.</p>
+      }
+    </div>
+  }
+
+  <div class="center">
+    <a routerLink="/urunler" class="btn btn-line">Tüm ürünleri gör</a>
+  </div>
+</section>
+
+<!-- Detay bandı -->
+<section class="detail" aria-labelledby="detail">
+  <div class="container">
+    <div class="detail-head">
+      <div>
+        <div class="eyebrow light">Atölyemizden</div>
+        <h2 id="detail" class="section-title">Kumaştan dikişe, her detay özenle.</h2>
+        <p>Trençkotumuzu yakından görün: geniş yaka, ayarlanabilir kuşak ve katlamalı manşet.</p>
+      </div>
+      <a routerLink="/urun/kemerli-kruvaze-trenckot" class="detail-link">ÜRÜNE GİT →</a>
+    </div>
+    <div class="detail-grid">
+      <figure><img src="/images/trench-collar.jpg" alt="Trençkotun geniş yakası" loading="lazy"><figcaption>Geniş yaka</figcaption></figure>
+      <figure><img src="/images/trench-belt.jpg" alt="Kruvaze düğmeler ve kuşak" loading="lazy"><figcaption>Kruvaze kapanış ve kuşak</figcaption></figure>
+      <figure><img src="/images/trench-cuff.jpg" alt="Katlamalı manşet detayı" loading="lazy"><figcaption>Katlamalı manşet</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- Kategoriler -->
+<section class="container cats" aria-labelledby="cats">
+  <div class="eyebrow">Kategoriler</div>
+  <h2 id="cats" class="section-title">Gardırobunu tamamla</h2>
+  <div class="cat-grid">
+    @for (c of categories(); track c.id) {
+      <a [routerLink]="['/kategori', c.slug]" class="cat">
+        <span class="serif">{{ c.name }}</span>
+        <small>ALIŞVERİŞE BAŞLA →</small>
+      </a>
+    }
+  </div>
+</section>

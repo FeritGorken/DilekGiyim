@@ -1,0 +1,89 @@
+<div class="head">
+  <h1 class="adm-title">Siparişler</h1>
+  <form role="search" (ngSubmit)="load()">
+    <label for="os" class="sr-only">Sipariş ara</label>
+    <input id="os" name="q" type="search" class="input" placeholder="Sipariş no, müşteri, e-posta" [(ngModel)]="q">
+    <button type="submit" class="adm-btn">Ara</button>
+  </form>
+</div>
+
+<div class="chips" role="tablist" aria-label="Sipariş durumu">
+  @for (s of statuses; track $index) {
+    <button type="button" role="tab" [attr.aria-selected]="filter() === s" (click)="setFilter(s)">
+      {{ s ? labels[s] : 'Tümü' }} <span class="text-muted">{{ s ? (counts()[s] ?? 0) : total() }}</span>
+    </button>
+  }
+</div>
+
+<div class="layout">
+  <section class="adm-card list" aria-label="Sipariş listesi">
+    <div class="table-wrap">
+      <table class="adm-table" style="min-width: 640px">
+        <thead><tr><th>Sipariş</th><th>Müşteri</th><th>Ürün</th><th>Ödeme</th><th>Tutar</th><th>Durum</th></tr></thead>
+        <tbody>
+          @for (o of orders(); track o.id) {
+            <tr [class.selected]="selected()?.id === o.id">
+              <td>
+                <button type="button" class="linkbtn" (click)="open(o.id)">#{{ o.orderNo }}</button>
+                <div class="text-muted" style="font-size: 12px">{{ o.createdAt | date: 'd MMM HH:mm' }}</div>
+              </td>
+              <td>{{ o.customerName }}</td>
+              <td class="text-muted">{{ o.itemCount }} ürün</td>
+              <td class="text-muted">{{ o.paymentMethod }}</td>
+              <td><strong>{{ o.total | tl }}</strong></td>
+              <td><span class="pill" [class]="'pill-' + o.status">{{ labels[o.status] }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="text-muted">Sipariş bulunamadı.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (selected(); as o) {
+    <aside class="adm-card detail" aria-labelledby="od">
+      <div class="detail-head">
+        <h2 id="od">Sipariş #{{ o.orderNo }}</h2>
+        <span class="pill" [class]="'pill-' + o.status">{{ labels[o.status] }}</span>
+      </div>
+      <div class="text-muted" style="font-size: 13px; margin-top: 4px">{{ o.createdAt | date: 'd MMMM y HH:mm' }} · {{ o.paymentMethod }}</div>
+
+      <ul class="lines">
+        @for (l of o.lines; track $index) {
+          <li><div>{{ l.productName }}<small>{{ l.colorName }} · {{ l.size }} · {{ l.quantity }} adet · {{ l.sku }}</small></div><strong>{{ l.lineTotal | tl }}</strong></li>
+        }
+      </ul>
+      <dl class="totals">
+        <dt>Ara toplam</dt><dd>{{ o.subtotal | tl }}</dd>
+        @if (o.discount > 0) { <dt>İndirim ({{ o.couponCode }})</dt><dd>−{{ o.discount | tl }}</dd> }
+        <dt>Kargo</dt><dd>{{ o.shipping === 0 ? 'Ücretsiz' : (o.shipping | tl) }}</dd>
+        <dt class="t">Toplam</dt><dd class="t">{{ o.total | tl }}</dd>
+      </dl>
+
+      <div class="addr">
+        <strong>Teslimat</strong><br>
+        {{ o.customerName }} · {{ o.phone }}<br>
+        {{ o.email }}<br>
+        {{ o.address }}, {{ o.city }}
+        @if (o.note) { <br><em>Not: {{ o.note }}</em> }
+      </div>
+
+      <form class="form" (ngSubmit)="save()">
+        <label class="field">Durumu güncelle
+          <select class="select" name="status" [(ngModel)]="edit.status">
+            @for (s of statuses; track $index) {
+              @if (s) { <option [ngValue]="s">{{ labels[s] }}</option> }
+            }
+          </select>
+        </label>
+        <label class="field">Kargo takip no
+          <input class="input" name="trackingNo" placeholder="Kargo firması takip numarası" [(ngModel)]="edit.trackingNo">
+        </label>
+        @if (message(); as m) { <div class="alert" [class.success]="m.ok" role="status">{{ m.text }}</div> }
+        <button type="submit" class="adm-btn primary" [disabled]="saving()">Kaydet</button>
+      </form>
+      <p class="note">Sipariş oluşturulduğunda ürünler stoktan düşülür; iptal ve iadede stoğa geri eklenir.</p>
+    </aside>
+  }
+</div>

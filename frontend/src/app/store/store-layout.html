@@ -1,0 +1,101 @@
+<div class="topbar">
+  <div class="container topbar-inner">
+    <span>{{ topMessage() }}</span>
+    <nav aria-label="Yardımcı bağlantılar" class="hide-sm">
+      <a routerLink="/urunler">Kampanyalar</a>
+      <a href="#">Sipariş Takibi</a>
+      <a href="#">Hakkımızda</a>
+      <a href="#">İletişim</a>
+    </nav>
+  </div>
+</div>
+
+<header class="header">
+  <div class="container header-inner">
+    <a routerLink="/" class="logo" aria-label="Dilek Giyim ana sayfa">
+      <span class="logo-word">dilek<span>giyim</span></span>
+      <span class="logo-tag">zamansız kadın giyim</span>
+    </a>
+
+    <form role="search" class="search" (ngSubmit)="onSearch()">
+      <label for="q" class="sr-only">Ürün ara</label>
+      <input id="q" name="q" type="search" placeholder="Ürün, kategori veya renk arayın" [(ngModel)]="search">
+      <button type="submit" aria-label="Ara">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+      </button>
+    </form>
+
+    <nav aria-label="Hesap" class="account">
+      <a href="#">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>
+        Hesabım
+      </a>
+      <a href="#">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"></path></svg>
+        Favorilerim
+      </a>
+      <a routerLink="/sepet" class="cart-link">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
+        Sepetim
+        @if (cart.count() > 0) {
+          <span class="badge" [attr.aria-label]="cart.count() + ' ürün'">{{ cart.count() }}</span>
+        }
+      </a>
+    </nav>
+  </div>
+</header>
+
+<nav aria-label="Kategoriler" class="catnav">
+  <div class="container catnav-inner">
+    <a routerLink="/urunler" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">YENİ SEZON</a>
+    @for (c of categories(); track c.id) {
+      <a [routerLink]="['/kategori', c.slug]" routerLinkActive="active">{{ c.name.toLocaleUpperCase('tr-TR') }}</a>
+    }
+    <a routerLink="/urunler" [queryParams]="{ tab: 'sale' }" class="sale">İNDİRİM</a>
+  </div>
+</nav>
+
+<router-outlet />
+
+<section class="newsletter" aria-labelledby="news">
+  <div class="container newsletter-inner">
+    <div>
+      <h2 id="news" class="serif">Yeni sezondan ilk siz haberdar olun</h2>
+      <p>Kampanyalar ve yeni ürünler e-posta adresinize gelsin.</p>
+    </div>
+    <form class="newsletter-form" (submit)="$event.preventDefault()">
+      <label for="nl" class="sr-only">E-posta adresiniz</label>
+      <input id="nl" type="email" class="input" placeholder="E-posta adresiniz">
+      <button type="submit" class="btn btn-dark">Abone ol</button>
+    </form>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container footer-grid">
+    <div>
+      <div class="logo-word light">dilek<span>giyim</span></div>
+      <p>[Mağaza adresi]<br>[Telefon] · [E-posta]</p>
+    </div>
+    <div>
+      <div class="footer-title">ALIŞVERİŞ</div>
+      <a routerLink="/urunler">Yeni Sezon</a>
+      @for (c of categories(); track c.id) {
+        <a [routerLink]="['/kategori', c.slug]">{{ c.name }}</a>
+      }
+    </div>
+    <div>
+      <div class="footer-title">YARDIM</div>
+      <a href="#">Sipariş Takibi</a>
+      <a href="#">İade ve Değişim</a>
+      <a href="#">Beden Tablosu</a>
+    </div>
+    <div>
+      <div class="footer-title">KURUMSAL</div>
+      <a href="#">Hakkımızda</a>
+      <a href="#">KVKK Aydınlatma Metni</a>
+      <a href="#">Mesafeli Satış Sözleşmesi</a>
+    </div>
+  </div>
+  <div class="container footer-bottom">© {{ year }} Dilek Giyim. Tüm hakları saklıdır.</div>
+</footer>

@@ -1,0 +1,159 @@
+<div>
+  <h1 class="adm-title">Fiyat, Kampanya ve Sepet</h1>
+  <div class="text-muted">Fiyatları, indirimleri ve sepet kurallarını tek yerden yönetin</div>
+</div>
+
+<div class="grid">
+  <!-- Toplu fiyat -->
+  <section class="adm-card" aria-labelledby="p1">
+    <h2 id="p1">Toplu fiyat güncelleme</h2>
+    <form class="row3" (ngSubmit)="runPreview()">
+      <label class="field">Kategori
+        <select class="select" name="cat" [(ngModel)]="bulk.categoryId" (ngModelChange)="runPreview()">
+          <option [ngValue]="null">Tüm ürünler</option>
+          @for (c of categories(); track c.id) { <option [ngValue]="c.id">{{ c.name }}</option> }
+        </select>
+      </label>
+      <label class="field">İşlem
+        <select class="select" name="op" [(ngModel)]="bulk.increase" (ngModelChange)="runPreview()">
+          <option [ngValue]="true">% artır</option>
+          <option [ngValue]="false">% indir</option>
+        </select>
+      </label>
+      <label class="field">Oran (%)
+        <input class="input" type="number" min="1" max="99" name="pct" [(ngModel)]="bulk.percent" (change)="runPreview()">
+      </label>
+    </form>
+    <label class="check"><input type="checkbox" name="r90" [(ngModel)]="bulk.roundTo90" (ngModelChange)="runPreview()">Fiyatları ,90 ile bitecek şekilde yuvarla</label>
+    <div class="table-wrap">
+      <table class="adm-table compact">
+        <thead><tr><th>Ürün</th><th class="r">Şu an</th><th class="r">Yeni</th></tr></thead>
+        <tbody>
+          @for (r of preview(); track r.productId) {
+            <tr><td>{{ r.name }}</td><td class="r text-muted">{{ r.current | tl }}</td><td class="r"><strong>{{ r.new | tl }}</strong></td></tr>
+          } @empty {
+            <tr><td colspan="3" class="text-muted">Bu kategoride ürün yok.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (bulkMsg(); as m) { <div class="alert" [class.success]="m.ok">{{ m.text }}</div> }
+    <button type="button" class="adm-btn wide" [disabled]="!preview().length" (click)="applyBulk()">Önizlemeyi uygula</button>
+  </section>
+
+  <!-- Kampanyalar -->
+  <section class="adm-card" aria-labelledby="p2">
+    <h2 id="p2">Kampanyalar</h2>
+    <ul class="campaigns">
+      @for (c of campaigns(); track c.id) {
+        <li>
+          <div>
+            <strong>{{ c.name }}</strong>
+            <div class="desc">{{ c.description }}</div>
+            <div class="dates">{{ c.startsAt | date: 'd MMM y' }} – {{ c.endsAt | date: 'd MMM y' }}</div>
+          </div>
+          <div class="right">
+            <span class="pill" [class]="campaignStatus(c).cls">{{ campaignStatus(c).label }}</span>
+            <button type="button" class="link-underline" (click)="deleteCampaign(c)">Sil</button>
+          </div>
+        </li>
+      } @empty {
+        <li class="text-muted">Kampanya yok.</li>
+      }
+    </ul>
+    <form class="new-campaign" (ngSubmit)="addCampaign()">
+      <label class="field">Kampanya adı<input class="input" name="cn" [(ngModel)]="newCampaign.name"></label>
+      <label class="field">Açıklama<input class="input" name="cd" placeholder="Örn. Trençkotlarda %15" [(ngModel)]="newCampaign.description"></label>
+      <div class="row2">
+        <label class="field">Başlangıç<input class="input" type="date" name="cs" [(ngModel)]="newCampaign.startsAt"></label>
+        <label class="field">Bitiş<input class="input" type="date" name="ce" [(ngModel)]="newCampaign.endsAt"></label>
+      </div>
+      @if (campaignMsg(); as m) { <div class="alert" [class.success]="m.ok">{{ m.text }}</div> }
+      <button type="submit" class="adm-btn">+ Kampanya ekle</button>
+      <p class="hint">Ürün indirimini ürün düzenleme ekranındaki "İndirimli fiyat" alanından ya da toplu fiyat güncellemesiyle uygulayın.</p>
+    </form>
+  </section>
+
+  <!-- Kuponlar -->
+  <section class="adm-card" aria-labelledby="p3">
+    <div class="card-head">
+      <h2 id="p3">İndirim kodları</h2>
+      <button type="button" class="adm-btn small" (click)="newCoupon()">+ Kod oluştur</button>
+    </div>
+    <div class="table-wrap">
+      <table class="adm-table compact" style="min-width: 460px">
+        <thead><tr><th>Kod</th><th>İndirim</th><th>Alt limit</th><th>Kullanım</th><th></th></tr></thead>
+        <tbody>
+          @for (c of coupons(); track c.id) {
+            <tr>
+              <td><strong>{{ c.code }}</strong> @if (!c.isActive) { <span class="pill pill-muted">Pasif</span> }</td>
+              <td>{{ c.type === 'Percent' ? '%' + c.value : (c.value | tl) }}</td>
+              <td class="text-muted">{{ c.minCartTotal > 0 ? (c.minCartTotal | tl) : '—' }}</td>
+              <td>
+                <div class="usage">{{ c.usedCount }} / {{ c.usageLimit ?? '∞' }}</div>
+                @if (c.usageLimit) { <div class="bar"><div [style.width.%]="usagePct(c)"></div></div> }
+              </td>
+              <td class="r">
+                <button type="button" class="link-underline" (click)="editCoupon(c)">Düzenle</button>
+                <button type="button" class="link-underline danger" (click)="deleteCoupon(c)">Sil</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (editingCoupon(); as c) {
+      <form class="coupon-form" (ngSubmit)="saveCoupon(c)">
+        <div class="row2">
+          <label class="field">Kod<input class="input upper" name="code" [(ngModel)]="c.code"></label>
+          <label class="field">Tür
+            <select class="select" name="type" [(ngModel)]="c.type">
+              <option value="Percent">Yüzde (%)</option>
+              <option value="Amount">Tutar (TL)</option>
+            </select>
+          </label>
+          <label class="field">Değer<input class="input" type="number" min="0" name="val" [(ngModel)]="c.value"></label>
+          <label class="field">Alt sepet tutarı (TL)<input class="input" type="number" min="0" name="min" [(ngModel)]="c.minCartTotal"></label>
+          <label class="field">Kullanım limiti<input class="input" type="number" min="0" name="lim" placeholder="Boş = sınırsız" [(ngModel)]="c.usageLimit"></label>
+          <label class="check"><input type="checkbox" name="act" [(ngModel)]="c.isActive">Aktif</label>
+        </div>
+        <div class="actions">
+          <button type="submit" class="adm-btn primary">Kaydet</button>
+          <button type="button" class="adm-btn" (click)="editingCoupon.set(null)">Vazgeç</button>
+        </div>
+      </form>
+    }
+    @if (couponMsg(); as m) { <div class="alert" [class.success]="m.ok">{{ m.text }}</div> }
+  </section>
+
+  <!-- Sepet ayarları -->
+  @if (settings(); as s) {
+    <section id="sepet" class="adm-card" aria-labelledby="p4">
+      <h2 id="p4">Sepet ve kargo ayarları</h2>
+      <form (ngSubmit)="saveSettings(s)">
+        <div class="row2">
+          <label class="field">Ücretsiz kargo eşiği (TL)<input class="input" type="number" min="0" name="fst" [(ngModel)]="s.freeShippingThreshold"></label>
+          <label class="field">Kargo ücreti (TL)<input class="input" type="number" min="0" step="0.01" name="fee" [(ngModel)]="s.shippingFee"></label>
+          <label class="field">En az sipariş tutarı (TL)<input class="input" type="number" min="0" name="mot" [(ngModel)]="s.minOrderTotal"></label>
+          <label class="field">Ürün başına en fazla adet<input class="input" type="number" min="1" name="mq" [(ngModel)]="s.maxQuantityPerItem"></label>
+        </div>
+        <div class="toggles">
+          <div class="toggle">
+            <div><strong>Ücretsiz kargo çubuğu</strong><small>Sepette "X TL daha ekleyin" mesajını göster</small></div>
+            <button type="button" role="switch" class="switch" aria-label="Ücretsiz kargo çubuğu" [attr.aria-checked]="s.showFreeShippingBar" (click)="s.showFreeShippingBar = !s.showFreeShippingBar"></button>
+          </div>
+          <div class="toggle">
+            <div><strong>Terk edilen sepet hatırlatması</strong><small>E-posta gönderimi bağlandığında devreye girer</small></div>
+            <button type="button" role="switch" class="switch" aria-label="Terk edilen sepet hatırlatması" [attr.aria-checked]="s.abandonedCartReminder" (click)="s.abandonedCartReminder = !s.abandonedCartReminder"></button>
+          </div>
+          <div class="toggle">
+            <div><strong>Hediye paketi seçeneği</strong><small>Ödeme adımında hediye paketi sun</small></div>
+            <button type="button" role="switch" class="switch" aria-label="Hediye paketi seçeneği" [attr.aria-checked]="s.giftWrapOption" (click)="s.giftWrapOption = !s.giftWrapOption"></button>
+          </div>
+        </div>
+        @if (settingsMsg(); as m) { <div class="alert" [class.success]="m.ok">{{ m.text }}</div> }
+        <button type="submit" class="adm-btn primary wide">Ayarları kaydet</button>
+      </form>
+    </section>
+  }
+</div>

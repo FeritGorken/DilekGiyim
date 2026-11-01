@@ -1,0 +1,99 @@
+<app-checkout-header [step]="1" />
+
+<main class="container page">
+  <h1>Sepetim <small>({{ cart.count() }} ürün)</small></h1>
+
+  @if (cart.notice(); as n) {
+    <div class="alert info notice" role="status">
+      {{ n }}
+      <button type="button" class="link-underline" (click)="cart.notice.set(null)">Kapat</button>
+    </div>
+  }
+
+  @if (cart.items().length === 0) {
+    <div class="empty">
+      <p>Sepetiniz şu an boş.</p>
+      <a routerLink="/" class="btn btn-dark">Alışverişe başla</a>
+    </div>
+  } @else {
+    @if (cart.quote(); as q) {
+      <div class="layout">
+        <section class="lines" aria-label="Sepetteki ürünler">
+          <div class="ship">
+            <div>{{ shipMessage() }}</div>
+            <div class="bar"><div [style.width.%]="shipPct()"></div></div>
+          </div>
+
+          <ul>
+            @for (l of q.lines; track l.variantId) {
+              <li>
+                <a [routerLink]="['/urun', l.slug]" class="thumb">
+                  @if (l.imageUrl) { <img [src]="l.imageUrl" [alt]="l.productName"> } @else { <span>Ürün fotoğrafı</span> }
+                </a>
+                <div class="body">
+                  <div class="top">
+                    <div>
+                      <h2><a [routerLink]="['/urun', l.slug]">{{ l.productName }}</a></h2>
+                      <div class="variant">Renk: {{ l.colorName }} · Beden: {{ l.size }}</div>
+                      @if (l.maxQuantity <= 3 && l.maxQuantity > 0) {
+                        <div class="text-warn small">Stokta son {{ l.maxQuantity }} ürün</div>
+                      }
+                    </div>
+                    <div class="line-total">
+                      {{ l.lineTotal | tl }}
+                      @if (l.originalPrice) { <s>{{ l.originalPrice * l.quantity | tl }}</s> }
+                    </div>
+                  </div>
+                  <div class="bottom">
+                    <div class="qty">
+                      <button type="button" aria-label="Adet azalt" (click)="cart.setQuantity(l.variantId, l.quantity - 1)">−</button>
+                      <span>{{ l.quantity }}</span>
+                      <button type="button" aria-label="Adet artır" [disabled]="l.quantity >= l.maxQuantity" (click)="cart.setQuantity(l.variantId, l.quantity + 1)">+</button>
+                    </div>
+                    <button type="button" class="link-underline remove" (click)="cart.remove(l.variantId)">Kaldır</button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+          <a routerLink="/" class="continue">← ALIŞVERİŞE DEVAM ET</a>
+        </section>
+
+        <aside class="summary" aria-labelledby="sum">
+          <h2 id="sum">Sipariş Özeti</h2>
+
+          <form class="coupon" (ngSubmit)="applyCoupon()">
+            <label for="coupon">İndirim kodu</label>
+            <div class="row">
+              <input id="coupon" name="coupon" class="input" placeholder="Örn. DILEK10" [(ngModel)]="couponInput">
+              <button type="submit" class="apply">Uygula</button>
+            </div>
+            @if (q.couponMessage) {
+              <div class="small" [class.text-ok]="q.couponApplied" [class.text-danger]="!q.couponApplied">
+                {{ q.couponMessage }}
+                @if (q.couponApplied) { <button type="button" class="link-underline" (click)="removeCoupon()">Kaldır</button> }
+              </div>
+            }
+          </form>
+
+          <dl>
+            <dt>Ara toplam</dt><dd>{{ q.subtotal | tl }}</dd>
+            <dt>İndirim</dt><dd class="text-ok">{{ q.discount > 0 ? '−' + (q.discount | tl) : '0,00 TL' }}</dd>
+            <dt>Kargo</dt><dd>{{ q.shipping === 0 ? 'Ücretsiz' : (q.shipping | tl) }}</dd>
+            <dt class="total">Toplam</dt><dd class="total">{{ q.total | tl }}</dd>
+          </dl>
+          <div class="vat">KDV dahil</div>
+
+          <a routerLink="/odeme" class="btn btn-dark go">Ödemeye geç</a>
+          <ul class="perks">
+            <li>3D Secure ile güvenli ödeme</li>
+            <li>Kredi kartına 6 taksit</li>
+            <li>14 gün içinde kolay iade</li>
+          </ul>
+        </aside>
+      </div>
+    } @else {
+      <p class="text-muted">Sepet hesaplanıyor…</p>
+    }
+  }
+</main>

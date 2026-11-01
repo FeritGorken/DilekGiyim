@@ -1,0 +1,101 @@
+<div class="head">
+  <div>
+    <h1 class="adm-title">Stok Takibi</h1>
+    <div class="text-muted">Her ürünün renk ve beden bazında stoğu</div>
+  </div>
+</div>
+
+@if (data(); as d) {
+  <div class="summary">
+    <div class="adm-card"><div class="label">Ürün / varyant</div><div class="value">{{ d.summary.productCount }} ürün · {{ d.summary.variantCount }} varyant</div></div>
+    <div class="adm-card"><div class="label">Toplam stok</div><div class="value">{{ d.summary.totalUnits }} adet</div></div>
+    <div class="adm-card"><div class="label">Kritik seviyede</div><div class="value text-warn">{{ d.summary.critical }} varyant</div></div>
+    <div class="adm-card"><div class="label">Tükenen</div><div class="value text-danger">{{ d.summary.out }} varyant</div></div>
+  </div>
+}
+
+@if (message(); as m) { <div class="alert" [class.success]="m.ok" role="status" style="margin-top: 16px">{{ m.text }}</div> }
+
+<div class="layout">
+  <section class="adm-card list" aria-label="Varyant stokları">
+    <div class="toolbar">
+      <div class="chips" role="tablist" aria-label="Stok durumu">
+        @for (f of filters; track f.id) {
+          <button type="button" role="tab" [attr.aria-selected]="filter() === f.id" (click)="setFilter(f.id)">
+            {{ f.label }} <span class="text-muted">{{ count(f.id) }}</span>
+          </button>
+        }
+      </div>
+      <form role="search" (ngSubmit)="load()">
+        <label for="ss" class="sr-only">Ürün veya SKU ara</label>
+        <input id="ss" name="q" type="search" class="input" placeholder="Ürün adı veya SKU" [(ngModel)]="q">
+      </form>
+    </div>
+    <div class="table-wrap">
+      <table class="adm-table" style="min-width: 720px">
+        <thead><tr><th>Ürün</th><th>Renk</th><th>Beden</th><th>SKU</th><th>Stok</th><th>Kritik eşik</th><th>Durum</th></tr></thead>
+        <tbody>
+          @for (r of data()?.rows ?? []; track r.variantId) {
+            <tr>
+              <td><strong>{{ r.productName }}</strong></td>
+              <td><span class="swatch" [style.background]="r.colorHex"></span> {{ r.colorName }}</td>
+              <td>{{ r.size }}</td>
+              <td class="sku">{{ r.sku }}</td>
+              <td>
+                <div class="stepper">
+                  <button type="button" [attr.aria-label]="r.sku + ' stok azalt'" [disabled]="r.stock === 0" (click)="step(r, -1)">−</button>
+                  <span>{{ r.stock }}</span>
+                  <button type="button" [attr.aria-label]="r.sku + ' stok artır'" (click)="step(r, 1)">+</button>
+                </div>
+              </td>
+              <td class="text-muted">{{ r.criticalThreshold }}</td>
+              <td><span class="pill" [class]="'pill-' + r.status">{{ r.status === 'out' ? 'Tükendi' : r.status === 'critical' ? 'Kritik' : 'Stokta' }}</span></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7" class="text-muted">Bu filtrede varyant yok.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <aside class="side">
+    <section class="adm-card" aria-labelledby="entry">
+      <h2 id="entry">Stok girişi</h2>
+      <form class="entry" (ngSubmit)="addEntry()">
+        <label class="field">Varyant
+          <select class="select" name="variant" [(ngModel)]="entry.variantId">
+            <option [ngValue]="0" disabled>Seçin</option>
+            @for (r of allRows(); track r.variantId) {
+              <option [ngValue]="r.variantId">{{ r.productName }} · {{ r.colorName }} · {{ r.size }}</option>
+            }
+          </select>
+        </label>
+        <label class="field">Gelen adet
+          <input class="input" type="number" min="1" name="qty" [(ngModel)]="entry.quantity">
+        </label>
+        <label class="field">Not
+          <input class="input" name="note" placeholder="Örn. tedarikçi irsaliye no" [(ngModel)]="entry.note">
+        </label>
+        <button type="submit" class="adm-btn primary">Stoğa ekle</button>
+      </form>
+    </section>
+
+    <section class="adm-card" aria-labelledby="mv">
+      <h2 id="mv">Son stok hareketleri</h2>
+      <ul class="mv">
+        @for (m of movements(); track m.id) {
+          <li>
+            <div>
+              <strong>{{ movementLabels[m.type] }}@if (m.reference) { · #{{ m.reference }} }</strong>
+              <small>{{ m.productName }} {{ m.colorName }} {{ m.size }} · {{ m.createdAt | date: 'd MMM HH:mm' }}</small>
+            </div>
+            <span [class]="m.delta > 0 ? 'plus' : 'minus'">{{ m.delta > 0 ? '+' : '' }}{{ m.delta }}</span>
+          </li>
+        } @empty {
+          <li class="text-muted">Henüz hareket yok.</li>
+        }
+      </ul>
+    </section>
+  </aside>
+</div>

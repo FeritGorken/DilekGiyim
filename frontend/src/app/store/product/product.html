@@ -1,0 +1,117 @@
+@if (notFound()) {
+  <section class="container empty">
+    <h1 class="section-title">Ürün bulunamadı</h1>
+    <p>Bu ürün satıştan kalkmış olabilir.</p>
+    <a routerLink="/urunler" class="btn btn-dark">Tüm ürünler</a>
+  </section>
+} @else if (product(); as p) {
+  <main class="container page">
+    <nav aria-label="Konum" class="crumbs">
+      <a routerLink="/">Ana Sayfa</a><span aria-hidden="true">/</span>
+      <a [routerLink]="['/kategori', p.categorySlug]">{{ p.categoryName }}</a><span aria-hidden="true">/</span>
+      <span class="current">{{ p.name }}</span>
+    </nav>
+
+    <div class="layout">
+      <!-- Galeri -->
+      <section class="gallery" aria-label="Ürün görselleri">
+        @if (p.images.length > 1) {
+          <div class="thumbs">
+            @for (img of p.images; track img.url; let i = $index) {
+              <button type="button" [attr.aria-label]="img.alt" [class.on]="imageIndex() === i" (click)="imageIndex.set(i)">
+                <img [src]="img.url" alt="">
+              </button>
+            }
+          </div>
+        }
+        <div class="main-img">
+          @if (p.images.length) {
+            <img [src]="p.images[imageIndex()].url" [alt]="p.images[imageIndex()].alt">
+          } @else {
+            <span class="placeholder">Ürün fotoğrafı</span>
+          }
+          @if (p.isNew) { <span class="tag">Yeni</span> }
+        </div>
+      </section>
+
+      <!-- Bilgi -->
+      <section class="info" aria-labelledby="pname">
+        <div class="meta">{{ p.categoryName.toLocaleUpperCase('tr-TR') }} · KOD: {{ p.code }}</div>
+        <h1 id="pname">{{ p.name }}</h1>
+        <div class="price">
+          <span>{{ price() | tl }}</span>
+          @if (p.salePrice) { <s>{{ p.price | tl }}</s> }
+          <small>KDV dahil</small>
+        </div>
+        <div class="installment">Peşin fiyatına 3 taksit · 6 taksitte aylık {{ installment() }}</div>
+
+        @if (p.colors.length) {
+          <div class="block first">
+            <div class="label">Renk: <span>{{ color() }}</span></div>
+            <div class="colors">
+              @for (c of p.colors; track c.name) {
+                <button type="button" [attr.aria-label]="c.name" [attr.aria-pressed]="color() === c.name" (click)="pickColor(c.name)">
+                  <span [style.background]="c.hex"></span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <div class="block">
+          <div class="label row"><span>Beden</span><a href="#" class="size-guide">Beden tablosu</a></div>
+          <div class="sizes">
+            @for (s of sizeOptions(); track s.size) {
+              <button type="button"
+                [attr.aria-pressed]="size() === s.size"
+                [attr.aria-label]="s.available === 0 ? s.size + ' beden, tükendi' : s.size + ' beden'"
+                [disabled]="s.available === 0"
+                (click)="pickSize(s.size)">{{ s.size }}</button>
+            }
+          </div>
+          @if (stockText(); as st) {
+            <div class="stock" [class]="st.cls">{{ st.text }}</div>
+          }
+        </div>
+
+        <div class="buy">
+          <div class="qty">
+            <button type="button" aria-label="Adet azalt" (click)="changeQty(-1)">−</button>
+            <span aria-live="polite">{{ qty() }}</span>
+            <button type="button" aria-label="Adet artır" (click)="changeQty(1)">+</button>
+          </div>
+          <button type="button" class="btn btn-dark add" (click)="addToCart()">Sepete ekle</button>
+        </div>
+        @if (message(); as m) {
+          <div class="msg" role="status">
+            {{ m }}
+            @if (m === 'Ürün sepetinize eklendi.') { <a routerLink="/sepet">Sepete git →</a> }
+          </div>
+        }
+
+        <ul class="perks">
+          <li>Bugün 15:00'e kadar verilen siparişler aynı gün kargoda</li>
+          <li>Kredi kartına 6 taksit</li>
+          <li>14 gün içinde ücretsiz iade ve değişim</li>
+        </ul>
+
+        <div class="acc">
+          <details open>
+            <summary>Ürün Açıklaması</summary>
+            <p>{{ p.description }}</p>
+          </details>
+          <details>
+            <summary>Kumaş ve Bakım</summary>
+            <p>{{ p.fabricAndCare || 'Bilgi yakında eklenecek.' }}</p>
+          </details>
+          <details>
+            <summary>Teslimat ve İade</summary>
+            <p>Siparişleriniz 1–3 iş günü içinde kargoya verilir. 14 gün içinde iade edebilirsiniz.</p>
+          </details>
+        </div>
+      </section>
+    </div>
+  </main>
+} @else {
+  <p class="container loading text-muted">Yükleniyor…</p>
+}

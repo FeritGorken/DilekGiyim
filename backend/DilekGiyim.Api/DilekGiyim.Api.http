@@ -1,11 +1,29 @@
 @baseUrl = http://localhost:5080
+@adminKey = gelistirme-admin-anahtari
 
-GET {{baseUrl}}/api/health
-
-###
-
-GET {{baseUrl}}/api/products
+### Mağaza
+GET {{baseUrl}}/api/products?featured=true&tab=best
 
 ###
+GET {{baseUrl}}/api/products/kemerli-kruvaze-trenckot
 
-GET {{baseUrl}}/api/products/1
+###
+POST {{baseUrl}}/api/cart/quote
+Content-Type: application/json
+
+{ "items": [ { "variantId": 3, "quantity": 1 } ], "couponCode": "DILEK10" }
+
+### Admin
+GET {{baseUrl}}/api/admin/dashboard
+X-Admin-Key: {{adminKey}}
+
+###
+GET {{baseUrl}}/api/admin/stock?filter=critical
+X-Admin-Key: {{adminKey}}
+
+###
+POST {{baseUrl}}/api/admin/prices/bulk
+X-Admin-Key: {{adminKey}}
+Content-Type: application/json
+
+{ "categoryId": 1, "increase": true, "percent": 10, "roundTo90": true, "apply": false }
