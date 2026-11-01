@@ -47,6 +47,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.Discount).HasPrecision(18, 2);
             e.Property(x => x.Shipping).HasPrecision(18, 2);
             e.Property(x => x.Total).HasPrecision(18, 2);
+            e.Property(x => x.PaidAmount).HasPrecision(18, 2);
+            e.HasIndex(x => x.PaymentToken);
+            e.HasIndex(x => x.Status);
             e.HasMany(x => x.Lines).WithOne().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Cascade);
         });
 

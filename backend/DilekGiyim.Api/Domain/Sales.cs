@@ -7,7 +7,28 @@ public enum OrderStatus
     Shipped,
     Delivered,
     Cancelled,
-    Returned
+    Returned,
+    /// <summary>Kartla ödemede: sipariş oluştu, stok ayrıldı, ödeme sonucu bekleniyor</summary>
+    AwaitingPayment
+}
+
+public static class PaymentMethods
+{
+    public const string Card = "Kredi kartı";
+    public const string BankTransfer = "Havale / EFT";
+    public const string CashOnDelivery = "Kapıda ödeme";
+    public static readonly string[] All = [Card, BankTransfer, CashOnDelivery];
+}
+
+public enum PaymentState
+{
+    /// <summary>Ödeme henüz alınmadı (kart sonucu, havale veya kapıda ödeme bekleniyor)</summary>
+    Pending,
+    Paid,
+    Failed,
+    /// <summary>Ödeme alındı ancak ödeme kuruluşu dolandırıcılık incelemesinde; onaylanmadan kargolamayın</summary>
+    UnderReview,
+    Refunded
 }
 
 public class Order
@@ -25,6 +46,20 @@ public class Order
 
     public string PaymentMethod { get; set; } = "";
     public int Installments { get; set; } = 1;
+
+    public PaymentState PaymentState { get; set; } = PaymentState.Pending;
+    /// <summary>"iyzico", "mock" … (kartla ödemede)</summary>
+    public string? PaymentProvider { get; set; }
+    /// <summary>Ödeme kuruluşunun oturum anahtarı (iyzico token)</summary>
+    public string? PaymentToken { get; set; }
+    /// <summary>Ödeme kuruluşundaki işlem numarası</summary>
+    public string? PaymentId { get; set; }
+    /// <summary>Müşterinin fiilen ödediği tutar (taksit farkı dahil)</summary>
+    public decimal? PaidAmount { get; set; }
+    public DateTime? PaidAt { get; set; }
+    public string? PaymentError { get; set; }
+    /// <summary>Sonuç sayfası için tahmin edilemez anahtar (sipariş no tek başına yetmesin)</summary>
+    public string PublicKey { get; set; } = Guid.NewGuid().ToString("N");
 
     public decimal Subtotal { get; set; }
     public decimal Discount { get; set; }

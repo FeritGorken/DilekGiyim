@@ -73,12 +73,22 @@ public static class StoreEndpoints
         api.MapPost("/cart/quote", async (PricingService pricing, CartQuoteRequest req) =>
             (await pricing.QuoteAsync(req.Items ?? [], req.CouponCode)).Quote);
 
-        api.MapPost("/orders", async (OrderService orders, CheckoutRequest req) =>
+        api.MapPost("/orders", async (OrderService orders, CheckoutRequest req, HttpContext http) =>
         {
-            var result = await orders.PlaceAsync(req);
+            var ip = http.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+            var result = await orders.PlaceAsync(req, ip);
             return result.Order is null
                 ? Results.BadRequest(new ErrorDto(result.Error!))
-                : Results.Ok(new CheckoutResultDto(result.Order.OrderNo, result.Order.Total));
+                : Results.Ok(new CheckoutResultDto(result.Order.OrderNo, result.Order.Total, result.PaymentPageUrl, result.Order.PublicKey));
+        });
+
+        // Sonuç sayfası için: sipariş no + gizli anahtar ile ödeme durumu
+        api.MapGet("/orders/{orderNo}/status", async (AppDbContext db, string orderNo, string key) =>
+        {
+            var o = await db.Orders.AsNoTracking().FirstOrDefaultAsync(x => x.OrderNo == orderNo);
+            if (o is null || !string.Equals(o.PublicKey, key, StringComparison.Ordinal))
+                return Results.NotFound(new ErrorDto("Sipariş bulunamadı."));
+            return Results.Ok(new OrderPaymentStatusDto(o.OrderNo, o.Status, o.PaymentState, o.PaymentMethod, o.Total, o.PaymentError));
         });
     }
 

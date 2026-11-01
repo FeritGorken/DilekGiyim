@@ -24,6 +24,17 @@ export const routes: Routes = [
     title: 'Teslimat ve Ödeme · Dilek Giyim',
     loadComponent: () => import('./store/checkout/checkout').then((m) => m.CheckoutPage),
   },
+  {
+    path: 'odeme/sonuc',
+    title: 'Ödeme Sonucu · Dilek Giyim',
+    loadComponent: () => import('./store/checkout/payment-result').then((m) => m.PaymentResult),
+  },
+  {
+    // Yalnızca geliştirmede (backend Mock ödeme sağlayıcısı) kullanılır
+    path: 'odeme/test',
+    title: 'Test Ödeme',
+    loadComponent: () => import('./store/checkout/test-payment').then((m) => m.TestPayment),
+  },
 
   // ---------- Yönetim paneli ----------
   {

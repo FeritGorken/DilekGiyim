@@ -27,3 +27,13 @@ X-Admin-Key: {{adminKey}}
 Content-Type: application/json
 
 { "categoryId": 1, "increase": true, "percent": 10, "roundTo90": true, "apply": false }
+
+### Sipariş (kartla ödeme: yanıtta paymentPageUrl döner)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerName": "Test Müşteri", "email": "test@example.com", "phone": "05321234567",
+  "address": "Test adres", "city": "İstanbul", "paymentMethod": "Kredi kartı", "installments": 1,
+  "items": [ { "variantId": 3, "quantity": 1 } ], "couponCode": null, "note": null
+}

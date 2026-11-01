@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import {
   AdminProduct, AdminProductListItem, BulkPriceRow, Campaign, Category, Coupon, Dashboard,
-  OrderDetail, OrderStatus, OrderSummary, StockList, StockMovement, StockMovementType, StockRow, StoreSettings
+  OrderDetail, OrderStatus, OrderSummary, PaymentState, StockList, StockMovement, StockMovementType, StockRow, StoreSettings
 } from '../core/models';
 
 /** Yönetim paneli API çağrıları. Anahtar adminKeyInterceptor ile eklenir. */
@@ -30,8 +30,8 @@ export class AdminApi {
   order(id: number): Observable<OrderDetail> {
     return this.http.get<OrderDetail>(`${this.base}/orders/${id}`);
   }
-  updateOrderStatus(id: number, status: OrderStatus, trackingNo: string | null): Observable<OrderDetail> {
-    return this.http.put<OrderDetail>(`${this.base}/orders/${id}/status`, { status, trackingNo });
+  updateOrderStatus(id: number, status: OrderStatus, trackingNo: string | null, paymentState: PaymentState | null = null): Observable<OrderDetail> {
+    return this.http.put<OrderDetail>(`${this.base}/orders/${id}/status`, { status, trackingNo, paymentState });
   }
 
   // Stok

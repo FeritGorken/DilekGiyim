@@ -263,6 +263,12 @@ img {
 .pill-Delivered { background: #dfede2; color: #24532f; }
 .pill-Cancelled { background: #efe9e0; color: #4f4740; }
 .pill-Returned { background: #f7deda; color: #8e2219; }
+.pill-AwaitingPayment { background: #efe9e0; color: #4f4740; }
+.pay-Pending { background: #fbebd3; color: #7a3e0b; }
+.pay-Paid { background: #dfede2; color: #24532f; }
+.pay-Failed { background: #f7deda; color: #8e2219; }
+.pay-UnderReview { background: #e3e9f4; color: #26406e; }
+.pay-Refunded { background: #efe9e0; color: #4f4740; }
 .pill-ok { background: #dfede2; color: #24532f; }
 .pill-critical { background: #fbebd3; color: #7a3e0b; }
 .pill-out { background: #f7deda; color: #8e2219; }

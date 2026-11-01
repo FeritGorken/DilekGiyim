@@ -43,7 +43,7 @@ public static class AdminEndpoints
 
             var orders = await db.Orders.AsNoTracking().Include(o => o.Lines)
                 .Where(o => o.CreatedAt >= prevFrom).ToListAsync();
-            static bool Counts(Order o) => o.Status is not (OrderStatus.Cancelled or OrderStatus.Returned);
+            static bool Counts(Order o) => o.Status is not (OrderStatus.Cancelled or OrderStatus.Returned or OrderStatus.AwaitingPayment);
 
             var current = orders.Where(o => o.CreatedAt >= from && Counts(o)).ToList();
             var previous = orders.Where(o => o.CreatedAt < from && Counts(o)).ToList();
@@ -104,7 +104,7 @@ public static class AdminEndpoints
         {
             var o = await db.Orders.Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == id);
             if (o is null) return Results.NotFound(new ErrorDto("Sipariş bulunamadı."));
-            var error = await svc.ChangeStatusAsync(o, req.Status, req.TrackingNo);
+            var error = await svc.ChangeStatusAsync(o, req.Status, req.TrackingNo, req.PaymentState);
             return error is null ? Results.Ok(ToDetail(o)) : Results.BadRequest(new ErrorDto(error));
         });
     }
@@ -340,13 +340,14 @@ public static class AdminEndpoints
     }
 
     private static OrderSummaryDto ToSummary(Order o) =>
-        new(o.Id, o.OrderNo, o.CreatedAt, o.CustomerName, o.Lines.Sum(l => l.Quantity), o.PaymentMethod, o.Total, o.Status);
+        new(o.Id, o.OrderNo, o.CreatedAt, o.CustomerName, o.Lines.Sum(l => l.Quantity), o.PaymentMethod, o.Total, o.Status, o.PaymentState);
 
     private static OrderDetailDto ToDetail(Order o) =>
         new(o.Id, o.OrderNo, o.CreatedAt, o.Status, o.CustomerName, o.Email, o.Phone, o.Address, o.City,
             o.PaymentMethod, o.Installments, o.Subtotal, o.Discount, o.Shipping, o.Total,
             o.CouponCode, o.TrackingNo, o.Note,
-            o.Lines.Select(l => new OrderLineDto(l.ProductName, l.ColorName, l.Size, l.Sku, l.UnitPrice, l.Quantity, l.UnitPrice * l.Quantity)).ToList());
+            o.Lines.Select(l => new OrderLineDto(l.ProductName, l.ColorName, l.Size, l.Sku, l.UnitPrice, l.Quantity, l.UnitPrice * l.Quantity)).ToList(),
+            o.PaymentState, o.PaymentProvider, o.PaymentId, o.PaidAmount, o.PaidAt, o.PaymentError);
 
     private static AdminProductDto ToAdminProduct(Product p) =>
         new(p.Id, p.Name, p.Slug, p.Code, p.Description, p.FabricAndCare, p.CategoryId,

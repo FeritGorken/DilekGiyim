@@ -103,7 +103,8 @@ export class CartService {
   checkout(req: Omit<CheckoutRequest, 'items' | 'couponCode'>): Observable<CheckoutResult> {
     return this.http
       .post<CheckoutResult>('/api/orders', { ...req, items: this.items(), couponCode: this.coupon() })
-      .pipe(tap(() => this.clear()));
+      // Kartla ödemede sepet, ödeme onaylanınca (sonuç sayfasında) boşaltılır
+      .pipe(tap((r) => { if (!r.paymentPageUrl) this.clear(); }));
   }
 
   private persist(): void {

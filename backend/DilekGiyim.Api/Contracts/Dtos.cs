@@ -47,9 +47,13 @@ public record CartQuoteDto(
 
 public record CheckoutRequest(
     string CustomerName, string Email, string Phone, string Address, string City,
-    string PaymentMethod, int Installments, List<CartItemRequest> Items, string? CouponCode, string? Note);
+    string PaymentMethod, int Installments, List<CartItemRequest> Items, string? CouponCode, string? Note,
+    string? IdentityNumber = null);
 
-public record CheckoutResultDto(string OrderNo, decimal Total);
+/// <summary>PaymentPageUrl doluysa müşteri ödeme sayfasına yönlendirilir; PublicKey sonuç sayfası içindir.</summary>
+public record CheckoutResultDto(string OrderNo, decimal Total, string? PaymentPageUrl, string PublicKey);
+
+public record OrderPaymentStatusDto(string OrderNo, OrderStatus Status, PaymentState PaymentState, string PaymentMethod, decimal Total, string? Error);
 
 // ---------- Admin ----------
 
@@ -59,7 +63,7 @@ public record TopProductDto(string Name, int Quantity);
 
 public record OrderSummaryDto(
     int Id, string OrderNo, DateTime CreatedAt, string CustomerName, int ItemCount,
-    string PaymentMethod, decimal Total, OrderStatus Status);
+    string PaymentMethod, decimal Total, OrderStatus Status, PaymentState PaymentState);
 
 public record OrderLineDto(string ProductName, string ColorName, string Size, string Sku, decimal UnitPrice, int Quantity, decimal LineTotal);
 
@@ -68,9 +72,10 @@ public record OrderDetailDto(
     string CustomerName, string Email, string Phone, string Address, string City,
     string PaymentMethod, int Installments,
     decimal Subtotal, decimal Discount, decimal Shipping, decimal Total,
-    string? CouponCode, string? TrackingNo, string? Note, List<OrderLineDto> Lines);
+    string? CouponCode, string? TrackingNo, string? Note, List<OrderLineDto> Lines,
+    PaymentState PaymentState, string? PaymentProvider, string? PaymentId, decimal? PaidAmount, DateTime? PaidAt, string? PaymentError);
 
-public record UpdateOrderStatusRequest(OrderStatus Status, string? TrackingNo);
+public record UpdateOrderStatusRequest(OrderStatus Status, string? TrackingNo, PaymentState? PaymentState = null);
 
 /// <summary>Status: "ok", "critical", "out"</summary>
 public record StockRowDto(

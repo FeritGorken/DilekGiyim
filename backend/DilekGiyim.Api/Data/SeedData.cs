@@ -132,8 +132,13 @@ public static class SeedData
                 Phone = "05xx xxx xx xx",
                 Address = "Örnek adres",
                 City = "İstanbul",
-                PaymentMethod = s.pay
+                PaymentMethod = s.pay.StartsWith(PaymentMethods.Card) ? PaymentMethods.Card : s.pay,
+                Installments = s.pay.Contains("6 taksit") ? 6 : s.pay.Contains("3 taksit") ? 3 : 1,
+                PaymentState = s.pay.StartsWith(PaymentMethods.Card) || s.st is OrderStatus.Shipped or OrderStatus.Delivered
+                    ? PaymentState.Paid : PaymentState.Pending,
+                PaymentProvider = s.pay.StartsWith(PaymentMethods.Card) ? "iyzico" : null
             };
+            if (order.PaymentState == PaymentState.Paid) order.PaidAt = order.CreatedAt;
             foreach (var (p, v, q) in s.lines)
             {
                 order.Lines.Add(new OrderLine

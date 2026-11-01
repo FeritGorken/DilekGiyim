@@ -93,13 +93,39 @@ export interface CheckoutRequest {
   items: CartItem[];
   couponCode: string | null;
   note: string | null;
+  identityNumber?: string | null;
 }
 
-export interface CheckoutResult { orderNo: string; total: number; }
+export interface CheckoutResult { orderNo: string; total: number; paymentPageUrl: string | null; publicKey: string; }
+
+export interface OrderPaymentStatus {
+  orderNo: string;
+  status: OrderStatus;
+  paymentState: PaymentState;
+  paymentMethod: string;
+  total: number;
+  error: string | null;
+}
+
+export const PAYMENT_METHODS = {
+  card: 'Kredi kartı',
+  transfer: 'Havale / EFT',
+  cod: 'Kapıda ödeme'
+} as const;
 
 // ---------- Admin ----------
 
-export type OrderStatus = 'New' | 'Preparing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Returned';
+export type OrderStatus = 'New' | 'Preparing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Returned' | 'AwaitingPayment';
+
+export type PaymentState = 'Pending' | 'Paid' | 'Failed' | 'UnderReview' | 'Refunded';
+
+export const PAYMENT_STATE_LABELS: Record<PaymentState, string> = {
+  Pending: 'Ödeme bekleniyor',
+  Paid: 'Ödendi',
+  Failed: 'Başarısız',
+  UnderReview: 'İncelemede',
+  Refunded: 'İade edildi'
+};
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   New: 'Yeni',
@@ -107,7 +133,8 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   Shipped: 'Kargoda',
   Delivered: 'Teslim edildi',
   Cancelled: 'İptal',
-  Returned: 'İade'
+  Returned: 'İade',
+  AwaitingPayment: 'Ödeme bekleniyor'
 };
 
 export interface OrderSummary {
@@ -119,6 +146,7 @@ export interface OrderSummary {
   paymentMethod: string;
   total: number;
   status: OrderStatus;
+  paymentState: PaymentState;
 }
 
 export interface OrderLine { productName: string; colorName: string; size: string; sku: string; unitPrice: number; quantity: number; lineTotal: number; }
@@ -136,6 +164,11 @@ export interface OrderDetail extends OrderSummary {
   trackingNo: string | null;
   note: string | null;
   lines: OrderLine[];
+  paymentProvider: string | null;
+  paymentId: string | null;
+  paidAmount: number | null;
+  paidAt: string | null;
+  paymentError: string | null;
 }
 
 export type StockRowStatus = 'ok' | 'critical' | 'out';

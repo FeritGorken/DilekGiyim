@@ -4,7 +4,7 @@ import { FormsModule, NgForm } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { CartService } from '../../core/cart.service';
-import { CheckoutResult } from '../../core/models';
+import { CheckoutResult, PAYMENT_METHODS } from '../../core/models';
 import { TlPipe } from '../../core/tl.pipe';
 import { CheckoutHeader } from '../checkout-header';
 
@@ -24,19 +24,23 @@ export class CheckoutPage implements OnInit {
     city: '',
     address: '',
     note: '',
-    paymentMethod: 'Havale / EFT',
+    identityNumber: '',
+    paymentMethod: PAYMENT_METHODS.card as string,
     accept: false
   };
 
+  protected readonly cardMethod = PAYMENT_METHODS.card;
+
   protected readonly paymentOptions = [
-    { value: 'Havale / EFT', label: 'Havale / EFT', help: 'IBAN bilgisi sipariş onayıyla e-postanıza gönderilir.', disabled: false },
-    { value: 'Kapıda ödeme', label: 'Kapıda ödeme', help: 'Teslimatta nakit veya kartla ödeyin.', disabled: false },
-    { value: 'Kredi kartı', label: 'Kredi kartı', help: 'Yakında: ödeme altyapısı bağlandığında açılacak.', disabled: true }
+    { value: PAYMENT_METHODS.card, label: 'Kredi / banka kartı', help: '3D Secure ile güvenli ödeme sayfasına yönlendirilirsiniz. Taksit seçenekleri orada gösterilir.' },
+    { value: PAYMENT_METHODS.transfer, label: 'Havale / EFT', help: 'IBAN bilgisi sipariş onayıyla e-postanıza gönderilir.' },
+    { value: PAYMENT_METHODS.cod, label: 'Kapıda ödeme', help: 'Teslimatta nakit veya kartla ödeyin.' }
   ];
 
   protected readonly submitting = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly result = signal<CheckoutResult | null>(null);
+  protected readonly redirecting = signal(false);
 
   ngOnInit(): void {
     this.cart.refresh();
@@ -51,8 +55,20 @@ export class CheckoutPage implements OnInit {
     }
     this.submitting.set(true);
     const { accept, ...data } = this.form;
-    this.cart.checkout({ ...data, installments: 1, note: data.note || null }).subscribe({
+    const isCard = data.paymentMethod === PAYMENT_METHODS.card;
+    this.cart.checkout({
+      ...data,
+      installments: 1,
+      note: data.note || null,
+      identityNumber: isCard && data.identityNumber ? data.identityNumber : null
+    }).subscribe({
       next: (r) => {
+        if (r.paymentPageUrl) {
+          // Ödeme kuruluşunun güvenli sayfasına geç; dönüşte /odeme/sonuc açılır
+          this.redirecting.set(true);
+          window.location.href = r.paymentPageUrl;
+          return;
+        }
         this.result.set(r);
         this.submitting.set(false);
       },

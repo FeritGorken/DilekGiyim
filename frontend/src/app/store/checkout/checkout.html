@@ -44,10 +44,19 @@
         <fieldset>
           <legend>Ödeme yöntemi</legend>
           @for (o of paymentOptions; track o.value) {
-            <label class="pay" [class.disabled]="o.disabled">
-              <input type="radio" name="paymentMethod" [value]="o.value" [disabled]="o.disabled" [(ngModel)]="form.paymentMethod">
+            <label class="pay">
+              <input type="radio" name="paymentMethod" [value]="o.value" [(ngModel)]="form.paymentMethod">
               <span><strong>{{ o.label }}</strong><small>{{ o.help }}</small></span>
             </label>
+          }
+          @if (form.paymentMethod === cardMethod) {
+            <label class="field tc">T.C. kimlik no (isteğe bağlı)
+              <input class="input" name="identityNumber" inputmode="numeric" maxlength="11" pattern="[0-9]{11}" [(ngModel)]="form.identityNumber">
+              <small class="text-muted">Ödeme kuruluşu fatura için isteyebilir; boş bırakabilirsiniz.</small>
+            </label>
+            <div class="cards" aria-hidden="true">
+              <span>VISA</span><span>Mastercard</span><span>TROY</span><span>3D Secure</span>
+            </div>
           }
         </fieldset>
 
@@ -59,7 +68,10 @@
         @if (error(); as e) { <div class="alert" role="alert">{{ e }}</div> }
 
         <button type="submit" class="btn btn-dark submit" [disabled]="submitting()">
-          {{ submitting() ? 'Sipariş oluşturuluyor…' : 'Siparişi onayla' }}
+          @if (redirecting()) { Ödeme sayfasına yönlendiriliyorsunuz… }
+          @else if (submitting()) { Sipariş oluşturuluyor… }
+          @else if (form.paymentMethod === cardMethod) { Ödemeye geç }
+          @else { Siparişi onayla }
         </button>
       </form>
 

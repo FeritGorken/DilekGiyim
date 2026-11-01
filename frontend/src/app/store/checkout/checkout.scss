@@ -101,11 +101,6 @@ legend {
     font-size: 13px;
     color: var(--muted);
   }
-
-  &.disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
 }
 
 .check {
@@ -191,4 +186,30 @@ dl {
   margin-top: 18px;
   font-size: 14px;
   color: var(--accent);
+}
+
+.tc {
+  margin-top: 14px;
+  max-width: 320px;
+
+  small {
+    font-size: 12px;
+    font-weight: 400;
+  }
+}
+
+.cards {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  span {
+    padding: 4px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--text-2);
+  }
 }

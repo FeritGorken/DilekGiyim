@@ -29,7 +29,10 @@
               </td>
               <td>{{ o.customerName }}</td>
               <td class="text-muted">{{ o.itemCount }} ürün</td>
-              <td class="text-muted">{{ o.paymentMethod }}</td>
+              <td>
+                <div class="text-muted">{{ o.paymentMethod }}</div>
+                <span class="pill" [class]="'pay-' + o.paymentState">{{ payLabels[o.paymentState] }}</span>
+              </td>
               <td><strong>{{ o.total | tl }}</strong></td>
               <td><span class="pill" [class]="'pill-' + o.status">{{ labels[o.status] }}</span></td>
             </tr>
@@ -47,7 +50,21 @@
         <h2 id="od">Sipariş #{{ o.orderNo }}</h2>
         <span class="pill" [class]="'pill-' + o.status">{{ labels[o.status] }}</span>
       </div>
-      <div class="text-muted" style="font-size: 13px; margin-top: 4px">{{ o.createdAt | date: 'd MMMM y HH:mm' }} · {{ o.paymentMethod }}</div>
+      <div class="text-muted" style="font-size: 13px; margin-top: 4px">{{ o.createdAt | date: 'd MMMM y HH:mm' }}</div>
+
+      <div class="payment">
+        <div class="pay-row">
+          <span>{{ o.paymentMethod }}@if (o.installments > 1) { · {{ o.installments }} taksit }</span>
+          <span class="pill" [class]="'pay-' + o.paymentState">{{ payLabels[o.paymentState] }}</span>
+        </div>
+        @if (o.paymentId) { <div class="text-muted">İşlem no: {{ o.paymentId }} ({{ o.paymentProvider }})</div> }
+        @if (o.paidAmount && o.paidAmount !== o.total) { <div class="text-muted">Tahsil edilen: {{ o.paidAmount | tl }} (taksit farkı dahil)</div> }
+        @if (o.paidAt) { <div class="text-muted">Ödeme tarihi: {{ o.paidAt | date: 'd MMM y HH:mm' }}</div> }
+        @if (o.paymentError) { <div class="text-danger">{{ o.paymentError }}</div> }
+        @if (o.paymentState === 'UnderReview') {
+          <div class="text-warn">Ödeme kuruluşu incelemesi sürüyor. Onaylanmadan kargolamayın.</div>
+        }
+      </div>
 
       <ul class="lines">
         @for (l of o.lines; track $index) {
@@ -72,18 +89,26 @@
       <form class="form" (ngSubmit)="save()">
         <label class="field">Durumu güncelle
           <select class="select" name="status" [(ngModel)]="edit.status">
-            @for (s of statuses; track $index) {
-              @if (s) { <option [ngValue]="s">{{ labels[s] }}</option> }
+            @if (o.status === 'AwaitingPayment') { <option [ngValue]="'AwaitingPayment'">{{ labels.AwaitingPayment }}</option> }
+            @for (s of editableStatuses; track s) {
+              <option [ngValue]="s">{{ labels[s] }}</option>
             }
           </select>
         </label>
+        @if (paymentOptions(o).length > 1) {
+          <label class="field">Ödeme durumu
+            <select class="select" name="paymentState" [(ngModel)]="edit.paymentState">
+              @for (p of paymentOptions(o); track p) { <option [ngValue]="p">{{ payLabels[p] }}</option> }
+            </select>
+          </label>
+        }
         <label class="field">Kargo takip no
           <input class="input" name="trackingNo" placeholder="Kargo firması takip numarası" [(ngModel)]="edit.trackingNo">
         </label>
         @if (message(); as m) { <div class="alert" [class.success]="m.ok" role="status">{{ m.text }}</div> }
         <button type="submit" class="adm-btn primary" [disabled]="saving()">Kaydet</button>
       </form>
-      <p class="note">Sipariş oluşturulduğunda ürünler stoktan düşülür; iptal ve iadede stoğa geri eklenir.</p>
+      <p class="note">Sipariş oluşturulduğunda ürünler stoktan düşülür; iptal ve iadede stoğa geri eklenir. Kartla ödenen siparişlerde para iadesini ödeme kuruluşu panelinden yapın, ardından burada "İade edildi" seçin.</p>
     </aside>
   }
 </div>

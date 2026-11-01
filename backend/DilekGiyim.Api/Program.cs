@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using DilekGiyim.Api.Data;
 using DilekGiyim.Api.Endpoints;
+using DilekGiyim.Api.Payments;
 using DilekGiyim.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +21,28 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 
 builder.Services.AddScoped<PricingService>();
 builder.Services.AddScoped<OrderService>();
+
+// Ödeme: "Payment:Provider" = "Iyzico" veya "Mock" (Mock yalnızca geliştirmede)
+builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection(PaymentOptions.Section));
+var paymentProvider = builder.Configuration[$"{PaymentOptions.Section}:Provider"] ?? "Mock";
+if (paymentProvider.Equals("Iyzico", StringComparison.OrdinalIgnoreCase))
+{
+    var iyz = builder.Configuration.GetSection($"{PaymentOptions.Section}:Iyzico");
+    if (string.IsNullOrWhiteSpace(iyz["ApiKey"]) || string.IsNullOrWhiteSpace(iyz["SecretKey"]))
+        throw new InvalidOperationException("iyzico seçili ama Payment:Iyzico:ApiKey / SecretKey ayarlanmamış.");
+    builder.Services.AddHttpClient<IPaymentProvider, IyzicoPaymentProvider>(c => c.Timeout = TimeSpan.FromSeconds(30));
+}
+else if (paymentProvider.Equals("Mock", StringComparison.OrdinalIgnoreCase))
+{
+    if (!builder.Environment.IsDevelopment())
+        throw new InvalidOperationException("Test ödeme sağlayıcısı (Mock) canlı ortamda kullanılamaz. Payment:Provider = Iyzico olarak ayarlayın.");
+    builder.Services.AddScoped<IPaymentProvider, MockPaymentProvider>();
+}
+else
+{
+    throw new InvalidOperationException($"Bilinmeyen ödeme sağlayıcısı: {paymentProvider}");
+}
+builder.Services.AddHostedService<PendingPaymentCleanup>();
 
 // Enum'lar JSON'da metin olarak gider ("New", "Shipped" ...)
 builder.Services.ConfigureHttpJsonOptions(o =>
@@ -61,5 +84,6 @@ app.UseCors(FrontendCors);
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 app.MapStoreEndpoints();
 app.MapAdminEndpoints();
+app.MapPaymentEndpoints();
 
 app.Run();

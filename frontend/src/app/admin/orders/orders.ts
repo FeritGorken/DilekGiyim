@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, effect, inject, input, OnInit, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
-import { ORDER_STATUS_LABELS, OrderDetail, OrderStatus, OrderSummary } from '../../core/models';
+import { ORDER_STATUS_LABELS, OrderDetail, OrderStatus, OrderSummary, PAYMENT_METHODS, PAYMENT_STATE_LABELS, PaymentState } from '../../core/models';
 import { TlPipe } from '../../core/tl.pipe';
 import { AdminApi, apiError } from '../admin-api.service';
 
@@ -29,6 +29,8 @@ import { AdminApi, apiError } from '../admin-api.service';
     .form { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
     .note { margin: 12px 0 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
     .detail-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .payment { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--admin-line); border-radius: 6px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+    .pay-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
   `
 })
 export class AdminOrders implements OnInit {
@@ -38,7 +40,10 @@ export class AdminOrders implements OnInit {
   readonly id = input<string>();
 
   protected readonly labels = ORDER_STATUS_LABELS;
-  protected readonly statuses: (OrderStatus | null)[] = [null, 'New', 'Preparing', 'Shipped', 'Delivered', 'Returned', 'Cancelled'];
+  protected readonly payLabels = PAYMENT_STATE_LABELS;
+  protected readonly statuses: (OrderStatus | null)[] = [null, 'New', 'Preparing', 'Shipped', 'Delivered', 'AwaitingPayment', 'Returned', 'Cancelled'];
+  /** Elle seçilebilen durumlar (Ödeme bekleniyor sistem tarafından yönetilir) */
+  protected readonly editableStatuses: OrderStatus[] = ['New', 'Preparing', 'Shipped', 'Delivered', 'Returned', 'Cancelled'];
   protected readonly filter = signal<OrderStatus | null>(null);
   protected readonly counts = signal<Partial<Record<OrderStatus, number>>>({});
   protected readonly total = signal(0);
@@ -47,7 +52,7 @@ export class AdminOrders implements OnInit {
   protected readonly message = signal<{ text: string; ok: boolean } | null>(null);
   protected readonly saving = signal(false);
   protected q = '';
-  protected edit = { status: 'New' as OrderStatus, trackingNo: '' };
+  protected edit = { status: 'New' as OrderStatus, trackingNo: '', paymentState: 'Pending' as PaymentState };
 
   constructor() {
     effect(() => {
@@ -86,8 +91,18 @@ export class AdminOrders implements OnInit {
     this.message.set(null);
     this.api.order(id).subscribe((o) => {
       this.selected.set(o);
-      this.edit = { status: o.status, trackingNo: o.trackingNo ?? '' };
+      this.edit = { status: o.status, trackingNo: o.trackingNo ?? '', paymentState: o.paymentState };
     });
+  }
+
+  /** Elle seçilebilecek ödeme durumları: havale/kapıda için "Ödendi", ödemesi alınmışsa "İade edildi" */
+  protected paymentOptions(o: OrderDetail): PaymentState[] {
+    const opts: PaymentState[] = [o.paymentState];
+    const isCard = o.paymentMethod === PAYMENT_METHODS.card;
+    if (o.paymentState === 'Pending' && !isCard) opts.push('Paid');
+    if (o.paymentState === 'UnderReview') opts.push('Paid');
+    if (o.paymentState === 'Paid' || o.paymentState === 'UnderReview') opts.push('Refunded');
+    return opts;
   }
 
   protected save(): void {
@@ -96,7 +111,8 @@ export class AdminOrders implements OnInit {
     if ((this.edit.status === 'Cancelled' || this.edit.status === 'Returned') && o.status !== this.edit.status &&
         !confirm('Sipariş iptal/iade olarak işaretlenecek ve ürünler stoğa geri eklenecek. Devam edilsin mi?')) return;
     this.saving.set(true);
-    this.api.updateOrderStatus(o.id, this.edit.status, this.edit.trackingNo).subscribe({
+    const payChanged = this.edit.paymentState !== o.paymentState ? this.edit.paymentState : null;
+    this.api.updateOrderStatus(o.id, this.edit.status, this.edit.trackingNo, payChanged).subscribe({
       next: (d) => {
         this.selected.set(d);
         this.saving.set(false);
